@@ -9,6 +9,9 @@ public class FakeUsuarioRepository : IUsuarioRepository
     public Task<Usuario?> BuscarPorEmailAsync(string email)
         => Task.FromResult(_usuarios.FirstOrDefault(u => u.Email == email));
 
+    public Task<bool> ExisteAlgumAsync()
+        => Task.FromResult(_usuarios.Count > 0);
+
     public Task AdicionarAsync(Usuario usuario)
     {
         _usuarios.Add(usuario);

@@ -17,6 +17,11 @@ public class EfUsuarioRepository : IUsuarioRepository
         return await _db.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
     }
 
+    public async Task<bool> ExisteAlgumAsync()
+    {
+        return await _db.Usuarios.AnyAsync();
+    }
+
     public async Task AdicionarAsync(Usuario usuario)
     {
         await _db.Usuarios.AddAsync(usuario);

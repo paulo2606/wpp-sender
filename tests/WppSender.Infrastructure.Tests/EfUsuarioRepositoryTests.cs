@@ -56,4 +56,25 @@ public class EfUsuarioRepositoryTests : IAsyncLifetime
 
         Assert.Null(encontrado);
     }
+
+    [Fact]
+    public async Task ExisteAlgumAsyncDeveRetornarFalso_QuandoBaseEstaVazia()
+    {
+        var repositorio = new EfUsuarioRepository(_dbContext);
+
+        var existeAlgum = await repositorio.ExisteAlgumAsync();
+
+        Assert.False(existeAlgum);
+    }
+
+    [Fact]
+    public async Task ExisteAlgumAsyncDeveRetornarVerdadeiro_QuandoJaHaUmUsuarioNaBase()
+    {
+        var repositorio = new EfUsuarioRepository(_dbContext);
+        await repositorio.AdicionarAsync(new Usuario(Guid.NewGuid(), "qualquer@teste.com", "hash-qualquer"));
+
+        var existeAlgum = await repositorio.ExisteAlgumAsync();
+
+        Assert.True(existeAlgum);
+    }
 }
