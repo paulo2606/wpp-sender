@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\WppSender.Infrastructure\WppSender.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\WppSender.Domain\WppSender.Domain.csproj" />
+    <ProjectReference Include="..\..\src\WppSender.Application\WppSender.Application.csproj" />
   </ItemGroup>
 
 </Project>
