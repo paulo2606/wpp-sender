@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WppSender.Application.Tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WppSender.Api.IntegrationTests", "tests\WppSender.Api.IntegrationTests\WppSender.Api.IntegrationTests.csproj", "{6FB3CB40-1EE6-46C6-94A1-1476129964C9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WppSender.Infrastructure.Tests", "tests\WppSender.Infrastructure.Tests\WppSender.Infrastructure.Tests.csproj", "{FF73C1E8-EEC5-4947-A6C9-D7C4EE05E25E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -115,6 +117,18 @@ Global
 		{6FB3CB40-1EE6-46C6-94A1-1476129964C9}.Release|x64.Build.0 = Release|Any CPU
 		{6FB3CB40-1EE6-46C6-94A1-1476129964C9}.Release|x86.ActiveCfg = Release|Any CPU
 		{6FB3CB40-1EE6-46C6-94A1-1476129964C9}.Release|x86.Build.0 = Release|Any CPU
+		{FF73C1E8-EEC5-4947-A6C9-D7C4EE05E25E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF73C1E8-EEC5-4947-A6C9-D7C4EE05E25E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF73C1E8-EEC5-4947-A6C9-D7C4EE05E25E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FF73C1E8-EEC5-4947-A6C9-D7C4EE05E25E}.Debug|x64.Build.0 = Debug|Any CPU
+		{FF73C1E8-EEC5-4947-A6C9-D7C4EE05E25E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FF73C1E8-EEC5-4947-A6C9-D7C4EE05E25E}.Debug|x86.Build.0 = Debug|Any CPU
+		{FF73C1E8-EEC5-4947-A6C9-D7C4EE05E25E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF73C1E8-EEC5-4947-A6C9-D7C4EE05E25E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF73C1E8-EEC5-4947-A6C9-D7C4EE05E25E}.Release|x64.ActiveCfg = Release|Any CPU
+		{FF73C1E8-EEC5-4947-A6C9-D7C4EE05E25E}.Release|x64.Build.0 = Release|Any CPU
+		{FF73C1E8-EEC5-4947-A6C9-D7C4EE05E25E}.Release|x86.ActiveCfg = Release|Any CPU
+		{FF73C1E8-EEC5-4947-A6C9-D7C4EE05E25E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -127,5 +141,6 @@ Global
 		{C4755897-F3E0-4178-B37C-38D1701C2D9D} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{03B2E628-BD42-4E9C-A2E0-2B70F89217F3} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{6FB3CB40-1EE6-46C6-94A1-1476129964C9} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{FF73C1E8-EEC5-4947-A6C9-D7C4EE05E25E} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
