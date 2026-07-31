@@ -7,14 +7,14 @@ public class UsuarioTests
 {
     private class HasherFakeQueSempreConfirma : IPasswordHasher
     {
-        public string Hash(string senhaPlana) => "hash-qualquer";
-        public bool Verify(string senhaPlana, string hash) => true;
+        public string Hash(string senha) => "hash-qualquer";
+        public bool Verify(string senha, string hash) => true;
     }
 
     private class HasherFakeQueSempreNega : IPasswordHasher
     {
-        public string Hash(string senhaPlana) => "hash-qualquer";
-        public bool Verify(string senhaPlana, string hash) => false;
+        public string Hash(string senha) => "hash-qualquer";
+        public bool Verify(string senha, string hash) => false;
     }
 
     [Fact]

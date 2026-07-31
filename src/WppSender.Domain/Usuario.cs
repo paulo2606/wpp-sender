@@ -13,8 +13,8 @@ public class Usuario
         SenhaHash = senhaHash;
     }
 
-    public bool Autenticar(string senhaPlana, IPasswordHasher hasher)
+    public bool Autenticar(string senha, IPasswordHasher hasher)
     {
-        return hasher.Verify(senhaPlana, SenhaHash);
+        return hasher.Verify(senha, SenhaHash);
     }
 }

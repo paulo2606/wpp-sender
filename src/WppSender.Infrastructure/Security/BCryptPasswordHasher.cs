@@ -4,7 +4,7 @@ namespace WppSender.Infrastructure.Security;
 
 public class BCryptPasswordHasher : IPasswordHasher
 {
-    public string Hash(string senhaPlana) => BCrypt.Net.BCrypt.HashPassword(senhaPlana);
+    public string Hash(string senha) => BCrypt.Net.BCrypt.HashPassword(senha);
 
-    public bool Verify(string senhaPlana, string hash) => BCrypt.Net.BCrypt.Verify(senhaPlana, hash);
+    public bool Verify(string senha, string hash) => BCrypt.Net.BCrypt.Verify(senha, hash);
 }

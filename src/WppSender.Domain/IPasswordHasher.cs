@@ -2,6 +2,6 @@ namespace WppSender.Domain;
 
 public interface IPasswordHasher
 {
-    string Hash(string senhaPlana);
-    bool Verify(string senhaPlana, string hash);
+    string Hash(string senha);
+    bool Verify(string senha, string hash);
 }
