@@ -35,6 +35,18 @@ public class AutenticarUsuarioUseCaseTests
     }
 
     [Fact]
+    public async Task DeveChamarHasher_QuandoEmailNaoExiste_ParaEvitarVazamentoDeTempoPorEnumeracaoDeUsuario()
+    {
+        var hasher = new FakePasswordHasher();
+        var useCase = new AutenticarUsuarioUseCase(new FakeUsuarioRepository(), hasher, new FakeJwtTokenGenerator());
+
+        var resultado = await useCase.ExecutarAsync("naoexiste@teste.com", "qualquer");
+
+        Assert.Equal(1, hasher.VerifyCallCount);
+        Assert.False(resultado.Sucesso);
+    }
+
+    [Fact]
     public async Task DeveRetornarFalhaComMensagemGenerica_QuandoSenhaEstaErrada()
     {
         var repositorio = new FakeUsuarioRepository();
