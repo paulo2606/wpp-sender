@@ -33,11 +33,6 @@ public class FakeLeadRepository : ILeadRepository
             query = query.Where(l => l.Nome.Contains(busca) || l.TelefoneNormalizado.Contains(busca));
         }
 
-        if (grupoId.HasValue)
-        {
-            query = query.Where(l => l.GrupoId == grupoId);
-        }
-
         var todos = query.OrderBy(l => l.Nome).ThenBy(l => l.Id).ToList();
         var pagina2 = todos.Skip((pagina - 1) * tamanhoPagina).Take(tamanhoPagina).ToList();
 
