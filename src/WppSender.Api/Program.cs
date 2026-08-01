@@ -6,7 +6,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using WppSender.Api.Middleware;
 using WppSender.Application.Auth;
+using WppSender.Application.Leads;
 using WppSender.Domain;
+using WppSender.Infrastructure.Csv;
 using WppSender.Infrastructure.Persistence;
 using WppSender.Infrastructure.Security;
 
@@ -45,6 +47,16 @@ builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<AutenticarUsuarioUseCase>();
 builder.Services.AddScoped<RegistrarUsuarioUseCase>();
+
+builder.Services.AddScoped<ILeadRepository, EfLeadRepository>();
+builder.Services.AddScoped<ILeadCsvParser, CsvHelperLeadParser>();
+builder.Services.AddScoped<ILeadCsvWriter, CsvHelperLeadWriter>();
+builder.Services.AddScoped<CriarLeadUseCase>();
+builder.Services.AddScoped<EditarLeadUseCase>();
+builder.Services.AddScoped<ExcluirLeadUseCase>();
+builder.Services.AddScoped<ListarLeadsUseCase>();
+builder.Services.AddScoped<ImportarLeadsCsvUseCase>();
+builder.Services.AddScoped<ExportarLeadsCsvUseCase>();
 
 builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
     .Configure<Microsoft.Extensions.Options.IOptions<JwtOptions>>((bearerOptions, jwtOptions) =>
