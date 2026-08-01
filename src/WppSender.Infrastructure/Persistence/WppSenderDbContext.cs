@@ -8,6 +8,7 @@ public class WppSenderDbContext : DbContext
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Lead> Leads => Set<Lead>();
     public DbSet<Endereco> Enderecos => Set<Endereco>();
+    public DbSet<Grupo> Grupos => Set<Grupo>();
 
     public WppSenderDbContext(DbContextOptions<WppSenderDbContext> options) : base(options) { }
 
@@ -34,6 +35,13 @@ public class WppSenderDbContext : DbContext
             entity.Property(e => e.Cep).IsRequired();
         });
 
+        modelBuilder.Entity<Grupo>(entity =>
+        {
+            entity.ToTable("grupos");
+            entity.HasKey(g => g.Id);
+            entity.Property(g => g.Nome).IsRequired();
+        });
+
         modelBuilder.Entity<Lead>(entity =>
         {
             entity.ToTable("leads");
@@ -45,6 +53,12 @@ public class WppSenderDbContext : DbContext
                 .HasDatabaseName("uq_leads_telefone_ativo")
                 .HasFilter("deletado_em IS NULL");
             entity.HasOne(l => l.Endereco).WithMany().HasForeignKey("EnderecoId").IsRequired(false);
+            entity.HasOne<Grupo>()
+                .WithMany()
+                .HasForeignKey(l => l.GrupoId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+            entity.HasIndex(l => l.GrupoId);
         });
     }
 }

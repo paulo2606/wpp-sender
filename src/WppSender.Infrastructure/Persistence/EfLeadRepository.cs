@@ -49,6 +49,11 @@ public class EfLeadRepository : ILeadRepository
             query = query.Where(l => l.Nome.Contains(busca) || l.TelefoneNormalizado.Contains(busca));
         }
 
+        if (grupoId is not null)
+        {
+            query = query.Where(l => l.GrupoId == grupoId);
+        }
+
         var total = await query.CountAsync();
         var itens = await query
             .OrderBy(l => l.Nome).ThenBy(l => l.Id)

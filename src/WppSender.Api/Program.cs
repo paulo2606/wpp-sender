@@ -49,6 +49,8 @@ builder.Services.AddScoped<AutenticarUsuarioUseCase>();
 builder.Services.AddScoped<RegistrarUsuarioUseCase>();
 
 builder.Services.AddScoped<ILeadRepository, EfLeadRepository>();
+builder.Services.AddScoped<IGrupoRepository, EfGrupoRepository>();
+builder.Services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 builder.Services.AddScoped<ILeadCsvParser, CsvHelperLeadParser>();
 builder.Services.AddScoped<ILeadCsvWriter, CsvHelperLeadWriter>();
 builder.Services.AddScoped<CriarLeadUseCase>();
