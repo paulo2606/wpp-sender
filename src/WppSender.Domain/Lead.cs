@@ -25,6 +25,15 @@ public class Lead
         DeletadoEm = null;
     }
 
+    // Construtor privado usado pelo EF Core para materializar a entidade.
+    // Necessário porque o construtor público recebe a navegação Endereco,
+    // que o EF Core não consegue vincular via construtor.
+    private Lead()
+    {
+        Nome = null!;
+        TelefoneNormalizado = null!;
+    }
+
     public void AtualizarDados(string nome, string telefone, string? instagram, Endereco? endereco, string? origem)
     {
         Nome = nome;
