@@ -43,6 +43,26 @@ public class CsvHelperLeadTests
         Assert.Contains("Rio de Janeiro", texto);
     }
 
+    [Fact]
+    public async Task EscreverAsync_DeveSanitizarCampoQueComecaComCaractereDeFormula()
+    {
+        var writer = new CsvHelperLeadWriter();
+        var lead = new Lead(Guid.NewGuid(), "=cmd|'/c calc'!A1", "11999999999", null, null, null);
+        using var destino = new MemoryStream();
+
+        await writer.EscreverAsync(destino, ParaAsyncEnumerable(lead));
+
+        destino.Position = 0;
+        var texto = new StreamReader(destino).ReadToEnd();
+        Assert.Contains("'=cmd|'/c calc'!A1", texto);
+
+        destino.Position = 0;
+        var parser = new CsvHelperLeadParser();
+        var linhas = parser.Parse(destino).ToList();
+        Assert.Single(linhas);
+        Assert.Equal("'=cmd|'/c calc'!A1", linhas[0].Nome);
+    }
+
     private static async IAsyncEnumerable<Lead> ParaAsyncEnumerable(params Lead[] leads)
     {
         foreach (var lead in leads)
