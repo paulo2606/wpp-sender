@@ -42,7 +42,7 @@ public class EfLeadRepository : ILeadRepository
 
     public async Task<(IReadOnlyList<Lead> Itens, int Total)> ListarAsync(string? busca, int pagina, int tamanhoPagina)
     {
-        var query = _db.Leads.Include(l => l.Endereco).Where(l => l.DeletadoEm == null);
+        var query = _db.Leads.Include(l => l.Endereco).AsNoTracking().Where(l => l.DeletadoEm == null);
 
         if (!string.IsNullOrWhiteSpace(busca))
         {
@@ -51,7 +51,7 @@ public class EfLeadRepository : ILeadRepository
 
         var total = await query.CountAsync();
         var itens = await query
-            .OrderBy(l => l.Nome)
+            .OrderBy(l => l.Nome).ThenBy(l => l.Id)
             .Skip((pagina - 1) * tamanhoPagina)
             .Take(tamanhoPagina)
             .ToListAsync();

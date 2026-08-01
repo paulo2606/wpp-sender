@@ -19,7 +19,16 @@ public class EditarLeadUseCase
         var lead = await _repositorio.BuscarPorIdAsync(id);
         if (lead is null || !lead.EstaAtivo)
         {
-            return EditarLeadResult.Falha(MensagemLeadNaoEncontrado);
+            return EditarLeadResult.Falha(MensagemLeadNaoEncontrado, EditarLeadErro.NaoEncontrado);
+        }
+
+        try
+        {
+            Lead.ValidarCamposObrigatorios(nome, telefone);
+        }
+        catch (ArgumentException ex)
+        {
+            return EditarLeadResult.Falha(ex.Message);
         }
 
         var telefoneNormalizadoNovo = Lead.NormalizarTelefone(telefone);
@@ -28,15 +37,30 @@ public class EditarLeadUseCase
             var outroComMesmoTelefone = await _repositorio.BuscarPorTelefoneNormalizadoAsync(telefoneNormalizadoNovo);
             if (outroComMesmoTelefone is not null && outroComMesmoTelefone.Id != lead.Id)
             {
-                return EditarLeadResult.Falha(MensagemTelefoneDuplicado);
+                return EditarLeadResult.Falha(MensagemTelefoneDuplicado, EditarLeadErro.TelefoneDuplicado);
             }
         }
 
-        var enderecoEntidade = endereco is null
-            ? null
-            : new Endereco(Guid.NewGuid(), endereco.Rua, endereco.Numero, endereco.Complemento, endereco.Bairro, endereco.Cidade, endereco.Estado, endereco.Cep);
+        // Se o lead já possui um endereço e um novo endereço foi informado, reaproveita
+        // a mesma instância/linha (evita órfão na tabela enderecos a cada edição).
+        // Só cria um Endereco novo quando o lead ainda não tinha nenhum.
+        // Endereço nulo é um "limpar endereço" explícito.
+        Endereco? enderecoAtualizado;
+        if (endereco is null)
+        {
+            enderecoAtualizado = null;
+        }
+        else if (lead.Endereco is not null)
+        {
+            lead.Endereco.AtualizarDados(endereco.Rua, endereco.Numero, endereco.Complemento, endereco.Bairro, endereco.Cidade, endereco.Estado, endereco.Cep);
+            enderecoAtualizado = lead.Endereco;
+        }
+        else
+        {
+            enderecoAtualizado = new Endereco(Guid.NewGuid(), endereco.Rua, endereco.Numero, endereco.Complemento, endereco.Bairro, endereco.Cidade, endereco.Estado, endereco.Cep);
+        }
 
-        lead.AtualizarDados(nome, telefone, instagram, enderecoEntidade, origem);
+        lead.AtualizarDados(nome, telefone, instagram, enderecoAtualizado, origem);
         await _repositorio.AtualizarAsync(lead);
 
         return EditarLeadResult.ComSucesso();

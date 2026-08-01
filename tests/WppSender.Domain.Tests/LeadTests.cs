@@ -48,4 +48,28 @@ public class LeadTests
         Assert.Equal("novo_insta", lead.Instagram);
         Assert.Equal("site", lead.Origem);
     }
+
+    [Theory]
+    [InlineData(null, "11912345678")]
+    [InlineData("", "11912345678")]
+    [InlineData("   ", "11912345678")]
+    [InlineData("Fulano", null)]
+    [InlineData("Fulano", "")]
+    [InlineData("Fulano", "   ")]
+    public void Construtor_DeveLancarArgumentException_QuandoNomeOuTelefoneVazios(string? nome, string? telefone)
+    {
+        Assert.Throws<ArgumentException>(() => new Lead(Guid.NewGuid(), nome!, telefone!, null, null, null));
+    }
+
+    [Theory]
+    [InlineData(null, "11912345678")]
+    [InlineData("Fulano", null)]
+    [InlineData("", "11912345678")]
+    [InlineData("Fulano", "")]
+    public void AtualizarDados_DeveLancarArgumentException_QuandoNomeOuTelefoneVazios(string? nome, string? telefone)
+    {
+        var lead = new Lead(Guid.NewGuid(), "Fulano", "11912345678", null, null, null);
+
+        Assert.Throws<ArgumentException>(() => lead.AtualizarDados(nome!, telefone!, null, null, null));
+    }
 }

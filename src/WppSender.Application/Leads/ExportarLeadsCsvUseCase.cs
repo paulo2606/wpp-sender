@@ -4,15 +4,15 @@ namespace WppSender.Application.Leads;
 
 public class ExportarLeadsCsvUseCase
 {
-    private const int TamanhoPagina = 500;
-
     private readonly ILeadRepository _repositorio;
     private readonly ILeadCsvWriter _writer;
+    private readonly int _tamanhoPagina;
 
-    public ExportarLeadsCsvUseCase(ILeadRepository repositorio, ILeadCsvWriter writer)
+    public ExportarLeadsCsvUseCase(ILeadRepository repositorio, ILeadCsvWriter writer, int tamanhoPagina = 500)
     {
         _repositorio = repositorio;
         _writer = writer;
+        _tamanhoPagina = tamanhoPagina;
     }
 
     public async Task ExecutarAsync(Stream destino)
@@ -25,7 +25,7 @@ public class ExportarLeadsCsvUseCase
         var pagina = 1;
         while (true)
         {
-            var (itens, total) = await _repositorio.ListarAsync(busca: null, pagina, TamanhoPagina);
+            var (itens, total) = await _repositorio.ListarAsync(busca: null, pagina, _tamanhoPagina);
             if (itens.Count == 0)
             {
                 yield break;
@@ -36,7 +36,7 @@ public class ExportarLeadsCsvUseCase
                 yield return lead;
             }
 
-            if (pagina * TamanhoPagina >= total)
+            if (pagina * _tamanhoPagina >= total)
             {
                 yield break;
             }

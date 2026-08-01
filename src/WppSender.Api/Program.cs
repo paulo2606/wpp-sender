@@ -55,6 +55,7 @@ builder.Services.AddScoped<CriarLeadUseCase>();
 builder.Services.AddScoped<EditarLeadUseCase>();
 builder.Services.AddScoped<ExcluirLeadUseCase>();
 builder.Services.AddScoped<ListarLeadsUseCase>();
+builder.Services.AddScoped<ObterLeadUseCase>();
 builder.Services.AddScoped<ImportarLeadsCsvUseCase>();
 builder.Services.AddScoped<ExportarLeadsCsvUseCase>();
 

@@ -38,4 +38,22 @@ public class ExportarLeadsCsvUseCaseTests
         Assert.Single(writer.LeadsRecebidos);
         Assert.Equal(ativo.LeadId, writer.LeadsRecebidos[0].Id);
     }
+
+    [Fact]
+    public async Task DeveIterarPorTodasAsPaginas_QuandoTotalExcedeOTamanhoDaPagina()
+    {
+        var repositorio = new FakeLeadRepository();
+        var criarUseCase = new CriarLeadUseCase(repositorio);
+        for (var i = 0; i < 5; i++)
+        {
+            await criarUseCase.ExecutarAsync($"Lead{i}", $"1191111000{i}", null, null, null);
+        }
+        var writer = new FakeLeadCsvWriter();
+        var useCase = new ExportarLeadsCsvUseCase(repositorio, writer, tamanhoPagina: 2);
+
+        await useCase.ExecutarAsync(Stream.Null);
+
+        Assert.Equal(5, writer.LeadsRecebidos.Count);
+        Assert.Equal(5, writer.LeadsRecebidos.Select(l => l.Id).Distinct().Count());
+    }
 }

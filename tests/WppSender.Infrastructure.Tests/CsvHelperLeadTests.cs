@@ -60,7 +60,67 @@ public class CsvHelperLeadTests
         var parser = new CsvHelperLeadParser();
         var linhas = parser.Parse(destino).ToList();
         Assert.Single(linhas);
-        Assert.Equal("'=cmd|'/c calc'!A1", linhas[0].Nome);
+        // O parser remove o prefixo de aspas que o próprio writer adicionou, para que
+        // exportar e reimportar o mesmo lead não acumule uma aspa extra a cada ciclo.
+        Assert.Equal("=cmd|'/c calc'!A1", linhas[0].Nome);
+    }
+
+    [Fact]
+    public async Task EscreverAsync_DeveSanitizarCampoQueComecaComTabOuCarriageReturn()
+    {
+        var writer = new CsvHelperLeadWriter();
+        var leadComTab = new Lead(Guid.NewGuid(), "\tNomeComTab", "11999999998", null, null, null);
+        var leadComCr = new Lead(Guid.NewGuid(), "\rNomeComCr", "11999999997", null, null, null);
+        using var destino = new MemoryStream();
+
+        await writer.EscreverAsync(destino, ParaAsyncEnumerable(leadComTab, leadComCr));
+
+        destino.Position = 0;
+        var texto = new StreamReader(destino).ReadToEnd();
+        Assert.Contains("'\tNomeComTab", texto);
+        Assert.Contains("'\rNomeComCr", texto);
+    }
+
+    [Fact]
+    public void Parse_NaoDeveRemoverApostrofo_QuandoNaoForOPrefixoDeSanitizacaoDoWriter()
+    {
+        var cabecalho = new[] { "nome", "telefone", "instagram", "rua", "numero", "complemento", "bairro", "cidade", "estado", "cep", "origem" };
+        var valores = new[] { "\"'Twas a name\"", "11912345678", "", "", "", "", "", "", "", "", "" };
+        var csvTexto = string.Join(',', cabecalho) + "\n" + string.Join(',', valores) + "\n";
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(csvTexto));
+        var parser = new CsvHelperLeadParser();
+
+        var linhas = parser.Parse(stream).ToList();
+
+        Assert.Single(linhas);
+        Assert.Equal("'Twas a name", linhas[0].Nome);
+    }
+
+    [Fact]
+    public void Parse_NaoDeveLancar_QuandoColunaOrigemAusenteDoCabecalho()
+    {
+        var cabecalho = new[] { "nome", "telefone", "instagram", "rua", "numero", "complemento", "bairro", "cidade", "estado", "cep" };
+        var valores = new[] { "Fulano", "11912345678", "", "", "", "", "", "", "", "" };
+        var csvTexto = string.Join(',', cabecalho) + "\n" + string.Join(',', valores) + "\n";
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(csvTexto));
+        var parser = new CsvHelperLeadParser();
+
+        var linhas = parser.Parse(stream).ToList();
+
+        Assert.Single(linhas);
+        Assert.Equal("Fulano", linhas[0].Nome);
+        Assert.Null(linhas[0].Origem);
+    }
+
+    [Fact]
+    public void Parse_DeveRetornarVazio_QuandoStreamVazio()
+    {
+        using var stream = new MemoryStream();
+        var parser = new CsvHelperLeadParser();
+
+        var linhas = parser.Parse(stream).ToList();
+
+        Assert.Empty(linhas);
     }
 
     private static async IAsyncEnumerable<Lead> ParaAsyncEnumerable(params Lead[] leads)

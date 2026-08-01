@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using CsvHelper;
 using WppSender.Application.Leads;
 using WppSender.Domain;
@@ -9,7 +10,9 @@ public class CsvHelperLeadWriter : ILeadCsvWriter
 {
     public async Task EscreverAsync(Stream destino, IAsyncEnumerable<Lead> leads)
     {
-        await using var writer = new StreamWriter(destino, leaveOpen: true);
+        // BOM explícito: sem ele, o Excel no Windows pt-BR interpreta o UTF-8 como
+        // ANSI/Latin-1 e corrompe acentos (ex.: "São Paulo" vira "SÃ£o Paulo").
+        await using var writer = new StreamWriter(destino, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true), leaveOpen: true);
         await using var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
         csvWriter.WriteField("nome");
@@ -47,7 +50,7 @@ public class CsvHelperLeadWriter : ILeadCsvWriter
     // Mitiga CSV Formula Injection: se o valor começar com um dos caracteres
     // que planilhas (Excel, Google Sheets, LibreOffice Calc) interpretam como
     // início de fórmula, prefixa com aspas simples para forçar leitura como texto.
-    private static readonly char[] CaracteresDeFormula = ['=', '+', '-', '@'];
+    private static readonly char[] CaracteresDeFormula = ['=', '+', '-', '@', '\t', '\r'];
 
     private static string SanitizarContraFormula(string valor)
     {

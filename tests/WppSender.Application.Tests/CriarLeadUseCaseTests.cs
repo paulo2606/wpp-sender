@@ -51,6 +51,23 @@ public class CriarLeadUseCaseTests
         Assert.Null(resultado.LeadId);
     }
 
+    [Theory]
+    [InlineData(null, "11912345678")]
+    [InlineData("", "11912345678")]
+    [InlineData("Fulano", null)]
+    [InlineData("Fulano", "")]
+    public async Task DeveRetornarFalha_QuandoNomeOuTelefoneVazios(string? nome, string? telefone)
+    {
+        var repositorio = new FakeLeadRepository();
+        var useCase = new CriarLeadUseCase(repositorio);
+
+        var resultado = await useCase.ExecutarAsync(nome!, telefone!, null, null, null);
+
+        Assert.False(resultado.Sucesso);
+        Assert.NotNull(resultado.MensagemErro);
+        Assert.Null(resultado.LeadId);
+    }
+
     [Fact]
     public async Task DevePermitirCriar_QuandoTelefoneEraDeUmLeadJaExcluido()
     {

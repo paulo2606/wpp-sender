@@ -93,4 +93,41 @@ public class EfLeadRepositoryTests : IAsyncLifetime
         Assert.Equal(5, total);
         Assert.Equal(2, itens.Count);
     }
+
+    [Fact]
+    public async Task ListarAsync_NaoDeveDuplicarNemPularLeads_QuandoVariosCompartilhamOMesmoNomeEPaginados()
+    {
+        var repositorio = new EfLeadRepository(_dbContext);
+        var idsEsperados = new List<Guid>();
+        for (var i = 0; i < 6; i++)
+        {
+            var lead = new Lead(Guid.NewGuid(), "MesmoNome", $"1190000{i:D4}", null, null, null);
+            idsEsperados.Add(lead.Id);
+            await repositorio.AdicionarAsync(lead);
+        }
+
+        var idsColetados = new List<Guid>();
+        var pagina = 1;
+        const int tamanhoPagina = 2;
+        while (true)
+        {
+            var (itens, total) = await repositorio.ListarAsync(busca: null, pagina, tamanhoPagina);
+            if (itens.Count == 0)
+            {
+                break;
+            }
+
+            idsColetados.AddRange(itens.Select(l => l.Id));
+
+            if (pagina * tamanhoPagina >= total)
+            {
+                break;
+            }
+
+            pagina++;
+        }
+
+        Assert.Equal(idsEsperados.OrderBy(id => id), idsColetados.OrderBy(id => id));
+        Assert.Equal(idsEsperados.Count, idsColetados.Distinct().Count());
+    }
 }

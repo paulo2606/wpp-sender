@@ -11,11 +11,20 @@ public class ListarLeadsUseCase
         _repositorio = repositorio;
     }
 
+    private const int TamanhoPaginaMinimo = 1;
+    private const int TamanhoPaginaMaximo = 100;
+
     public async Task<ListaLeadsResultado> ExecutarAsync(string? busca, int pagina, int tamanhoPagina)
     {
-        var (itens, total) = await _repositorio.ListarAsync(busca, pagina, tamanhoPagina);
+        // Clampa aqui, na fronteira única entre a API e os repositórios, para que tanto
+        // o FakeLeadRepository (testes) quanto o EfLeadRepository (Postgres) nunca recebam
+        // uma página/tamanho inválido — Postgres rejeita OFFSET negativo com um 500.
+        var paginaValida = Math.Max(pagina, TamanhoPaginaMinimo);
+        var tamanhoPaginaValido = Math.Clamp(tamanhoPagina, TamanhoPaginaMinimo, TamanhoPaginaMaximo);
+
+        var (itens, total) = await _repositorio.ListarAsync(busca, paginaValida, tamanhoPaginaValido);
         var resumos = itens
-            .Select(l => new LeadResumo(l.Id, l.Nome, l.TelefoneNormalizado, l.Instagram, l.Origem))
+            .Select(LeadResumo.DeLead)
             .ToList();
 
         return new ListaLeadsResultado(resumos, total);

@@ -12,6 +12,7 @@ public class LeadsController : ControllerBase
     private readonly EditarLeadUseCase _editarUseCase;
     private readonly ExcluirLeadUseCase _excluirUseCase;
     private readonly ListarLeadsUseCase _listarUseCase;
+    private readonly ObterLeadUseCase _obterUseCase;
     private readonly ImportarLeadsCsvUseCase _importarUseCase;
     private readonly ExportarLeadsCsvUseCase _exportarUseCase;
 
@@ -20,6 +21,7 @@ public class LeadsController : ControllerBase
         EditarLeadUseCase editarUseCase,
         ExcluirLeadUseCase excluirUseCase,
         ListarLeadsUseCase listarUseCase,
+        ObterLeadUseCase obterUseCase,
         ImportarLeadsCsvUseCase importarUseCase,
         ExportarLeadsCsvUseCase exportarUseCase)
     {
@@ -27,9 +29,24 @@ public class LeadsController : ControllerBase
         _editarUseCase = editarUseCase;
         _excluirUseCase = excluirUseCase;
         _listarUseCase = listarUseCase;
+        _obterUseCase = obterUseCase;
         _importarUseCase = importarUseCase;
         _exportarUseCase = exportarUseCase;
     }
+
+    private static LeadResponse ParaLeadResponse(LeadResumo lead) => new(
+        lead.Id,
+        lead.Nome,
+        lead.TelefoneNormalizado,
+        lead.Instagram,
+        lead.Origem,
+        lead.Rua,
+        lead.Numero,
+        lead.Complemento,
+        lead.Bairro,
+        lead.Cidade,
+        lead.Estado,
+        lead.Cep);
 
     private static EnderecoInput? ParaEnderecoInput(EnderecoRequest? request) =>
         request is null
@@ -56,15 +73,28 @@ public class LeadsController : ControllerBase
 
         if (!resultado.Sucesso)
         {
-            if (resultado.MensagemErro == "Lead não encontrado")
+            return resultado.Erro switch
             {
-                return NotFound(new ErroResponse(resultado.MensagemErro));
-            }
-
-            return Conflict(new ErroResponse(resultado.MensagemErro!));
+                EditarLeadErro.NaoEncontrado => NotFound(new ErroResponse(resultado.MensagemErro!)),
+                EditarLeadErro.TelefoneDuplicado => Conflict(new ErroResponse(resultado.MensagemErro!)),
+                _ => BadRequest(new ErroResponse(resultado.MensagemErro!)),
+            };
         }
 
         return Ok();
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> ObterPorId(Guid id)
+    {
+        var resultado = await _obterUseCase.ExecutarAsync(id);
+
+        if (!resultado.Sucesso)
+        {
+            return NotFound(new ErroResponse(resultado.MensagemErro!));
+        }
+
+        return Ok(ParaLeadResponse(resultado.Lead!));
     }
 
     [HttpDelete("{id:guid}")]
@@ -85,15 +115,20 @@ public class LeadsController : ControllerBase
     {
         var resultado = await _listarUseCase.ExecutarAsync(busca, pagina, tamanhoPagina);
         var itens = resultado.Itens
-            .Select(l => new LeadResponse(l.Id, l.Nome, l.TelefoneNormalizado, l.Instagram, l.Origem))
+            .Select(ParaLeadResponse)
             .ToList();
 
         return Ok(new ListaLeadsResponse(itens, resultado.Total, pagina, tamanhoPagina));
     }
 
     [HttpPost("importar")]
-    public async Task<IActionResult> Importar(IFormFile arquivo)
+    public async Task<IActionResult> Importar(IFormFile? arquivo)
     {
+        if (arquivo is null || arquivo.Length == 0)
+        {
+            return BadRequest(new ErroResponse("Arquivo CSV obrigatório"));
+        }
+
         await using var stream = arquivo.OpenReadStream();
         var resultado = await _importarUseCase.ExecutarAsync(stream);
         var puladas = resultado.Puladas

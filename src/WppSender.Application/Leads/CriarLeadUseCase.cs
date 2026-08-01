@@ -15,11 +15,19 @@ public class CriarLeadUseCase
 
     public async Task<CriarLeadResult> ExecutarAsync(string nome, string telefone, string? instagram, EnderecoInput? endereco, string? origem)
     {
-        var enderecoEntidade = endereco is null
-            ? null
-            : new Endereco(Guid.NewGuid(), endereco.Rua, endereco.Numero, endereco.Complemento, endereco.Bairro, endereco.Cidade, endereco.Estado, endereco.Cep);
+        Lead lead;
+        try
+        {
+            var enderecoEntidade = endereco is null
+                ? null
+                : new Endereco(Guid.NewGuid(), endereco.Rua, endereco.Numero, endereco.Complemento, endereco.Bairro, endereco.Cidade, endereco.Estado, endereco.Cep);
 
-        var lead = new Lead(Guid.NewGuid(), nome, telefone, instagram, enderecoEntidade, origem);
+            lead = new Lead(Guid.NewGuid(), nome, telefone, instagram, enderecoEntidade, origem);
+        }
+        catch (ArgumentException ex)
+        {
+            return CriarLeadResult.Falha(ex.Message);
+        }
 
         var existente = await _repositorio.BuscarPorTelefoneNormalizadoAsync(lead.TelefoneNormalizado);
         if (existente is not null)

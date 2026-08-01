@@ -16,6 +16,8 @@ public class Lead
 
     public Lead(Guid id, string nome, string telefone, string? instagram, Endereco? endereco, string? origem)
     {
+        ValidarCamposObrigatorios(nome, telefone);
+
         Id = id;
         Nome = nome;
         TelefoneNormalizado = NormalizarTelefone(telefone);
@@ -36,6 +38,8 @@ public class Lead
 
     public void AtualizarDados(string nome, string telefone, string? instagram, Endereco? endereco, string? origem)
     {
+        ValidarCamposObrigatorios(nome, telefone);
+
         Nome = nome;
         TelefoneNormalizado = NormalizarTelefone(telefone);
         Instagram = instagram;
@@ -51,5 +55,21 @@ public class Lead
     public static string NormalizarTelefone(string telefone)
     {
         return new string(telefone.Where(char.IsDigit).ToArray());
+    }
+
+    // Exposto como público para que casos de uso (ex.: EditarLeadUseCase) possam validar
+    // nome/telefone antes de operações que dependem deles (como normalizar o telefone
+    // para busca de duplicidade) sem duplicar a mensagem de erro em dois lugares.
+    public static void ValidarCamposObrigatorios(string nome, string telefone)
+    {
+        if (string.IsNullOrWhiteSpace(nome))
+        {
+            throw new ArgumentException("Nome é obrigatório", nameof(nome));
+        }
+
+        if (string.IsNullOrWhiteSpace(telefone))
+        {
+            throw new ArgumentException("Telefone é obrigatório", nameof(telefone));
+        }
     }
 }
