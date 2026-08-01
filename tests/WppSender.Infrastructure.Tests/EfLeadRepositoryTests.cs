@@ -130,4 +130,25 @@ public class EfLeadRepositoryTests : IAsyncLifetime
         Assert.Equal(idsEsperados.OrderBy(id => id), idsColetados.OrderBy(id => id));
         Assert.Equal(idsEsperados.Count, idsColetados.Distinct().Count());
     }
+
+    [Fact]
+    public async Task ListarAsync_DeveFiltrarPorGrupoId_QuandoInformado()
+    {
+        var grupoRepositorio = new EfGrupoRepository(_dbContext);
+        var leadRepositorio = new EfLeadRepository(_dbContext);
+        var grupo = new Grupo(Guid.NewGuid(), "Grupo Filtro", null);
+        await grupoRepositorio.AdicionarAsync(grupo);
+
+        var leadDoGrupo = new Lead(Guid.NewGuid(), "DoGrupo", "11933333333", null, null, null, grupo.Id);
+        var leadSemGrupo = new Lead(Guid.NewGuid(), "SemGrupo", "11944444444", null, null, null);
+        await leadRepositorio.AdicionarAsync(leadDoGrupo);
+        await leadRepositorio.AdicionarAsync(leadSemGrupo);
+
+        var (itens, total) = await leadRepositorio.ListarAsync(busca: null, pagina: 1, tamanhoPagina: 10, grupoId: grupo.Id);
+
+        Assert.Equal(1, total);
+        Assert.Single(itens);
+        Assert.Equal("DoGrupo", itens[0].Nome);
+        Assert.Equal(grupo.Id, itens[0].GrupoId);
+    }
 }
