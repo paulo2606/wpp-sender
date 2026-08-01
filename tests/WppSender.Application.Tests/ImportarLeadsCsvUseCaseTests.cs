@@ -72,4 +72,22 @@ public class ImportarLeadsCsvUseCaseTests
         Assert.Equal(1, resultado.Importados);
         Assert.Empty(resultado.Puladas);
     }
+
+    [Fact]
+    public async Task DeveChamarRepositorioApenasUmaVez_QuandoTelefoneDuplicadoDentroDoProprioArquivo()
+    {
+        var repositorio = new FakeLeadRepository();
+        var parser = new FakeLeadCsvParser(new[]
+        {
+            Linha(2, "Ana", "11911111111"),
+            Linha(3, "Ana Duplicada", "(11) 91111-1111"),
+        });
+        var useCase = new ImportarLeadsCsvUseCase(repositorio, parser);
+
+        var resultado = await useCase.ExecutarAsync(Stream.Null);
+
+        Assert.Equal(1, resultado.Importados);
+        Assert.Single(resultado.Puladas);
+        Assert.Equal(1, repositorio.ChamadasBuscarPorTelefone);
+    }
 }

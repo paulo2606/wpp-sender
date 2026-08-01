@@ -5,9 +5,13 @@ namespace WppSender.Application.Tests.Fakes;
 public class FakeLeadRepository : ILeadRepository
 {
     private readonly List<Lead> _leads = new();
+    public int ChamadasBuscarPorTelefone { get; private set; }
 
     public Task<Lead?> BuscarPorTelefoneNormalizadoAsync(string telefoneNormalizado)
-        => Task.FromResult(_leads.FirstOrDefault(l => l.TelefoneNormalizado == telefoneNormalizado && l.EstaAtivo));
+    {
+        ChamadasBuscarPorTelefone++;
+        return Task.FromResult(_leads.FirstOrDefault(l => l.TelefoneNormalizado == telefoneNormalizado && l.EstaAtivo));
+    }
 
     public Task<Lead?> BuscarPorIdAsync(Guid id)
         => Task.FromResult(_leads.FirstOrDefault(l => l.Id == id));
