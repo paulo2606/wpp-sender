@@ -69,6 +69,7 @@ public class ListarLeadsUseCaseTests
 
         Assert.Equal(resultadoPaginaUm.Itens.Select(i => i.Id), resultadoPaginaInvalida.Itens.Select(i => i.Id));
         Assert.Equal(resultadoPaginaUm.Total, resultadoPaginaInvalida.Total);
+        Assert.Equal(1, resultadoPaginaInvalida.Pagina);
     }
 
     [Fact]
@@ -86,5 +87,6 @@ public class ListarLeadsUseCaseTests
 
         Assert.Equal(110, resultadoOversized.Total);
         Assert.Equal(100, resultadoOversized.Itens.Count);
+        Assert.Equal(100, resultadoOversized.TamanhoPagina);
     }
 }

@@ -118,7 +118,7 @@ public class LeadsController : ControllerBase
             .Select(ParaLeadResponse)
             .ToList();
 
-        return Ok(new ListaLeadsResponse(itens, resultado.Total, pagina, tamanhoPagina));
+        return Ok(new ListaLeadsResponse(itens, resultado.Total, resultado.Pagina, resultado.TamanhoPagina));
     }
 
     [HttpPost("importar")]

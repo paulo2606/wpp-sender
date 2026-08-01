@@ -106,6 +106,15 @@ public class LeadsEndpointTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task DeveRetornarTamanhoPaginaEfetivo_QuandoTamanhoPaginaOversized()
+    {
+        var listagem = await _client.GetFromJsonAsync<ListaLeadsResponseTeste>("/api/leads?tamanhoPagina=1000");
+
+        Assert.NotNull(listagem);
+        Assert.Equal(100, listagem!.TamanhoPagina);
+    }
+
+    [Fact]
     public async Task DeveRetornarBadRequest_QuandoImportarSemArquivo()
     {
         using var conteudo = new MultipartFormDataContent();

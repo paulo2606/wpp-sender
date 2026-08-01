@@ -27,6 +27,6 @@ public class ListarLeadsUseCase
             .Select(LeadResumo.DeLead)
             .ToList();
 
-        return new ListaLeadsResultado(resumos, total);
+        return new ListaLeadsResultado(resumos, total, paginaValida, tamanhoPaginaValido);
     }
 }
