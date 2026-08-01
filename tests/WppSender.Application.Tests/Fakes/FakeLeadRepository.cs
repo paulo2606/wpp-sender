@@ -24,13 +24,18 @@ public class FakeLeadRepository : ILeadRepository
 
     public Task AtualizarAsync(Lead lead) => Task.CompletedTask;
 
-    public Task<(IReadOnlyList<Lead> Itens, int Total)> ListarAsync(string? busca, int pagina, int tamanhoPagina)
+    public Task<(IReadOnlyList<Lead> Itens, int Total)> ListarAsync(string? busca, int pagina, int tamanhoPagina, Guid? grupoId = null)
     {
         var query = _leads.Where(l => l.EstaAtivo);
 
         if (!string.IsNullOrWhiteSpace(busca))
         {
             query = query.Where(l => l.Nome.Contains(busca) || l.TelefoneNormalizado.Contains(busca));
+        }
+
+        if (grupoId.HasValue)
+        {
+            query = query.Where(l => l.GrupoId == grupoId);
         }
 
         var todos = query.OrderBy(l => l.Nome).ThenBy(l => l.Id).ToList();

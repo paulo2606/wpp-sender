@@ -6,5 +6,5 @@ public interface ILeadRepository
     Task<Lead?> BuscarPorIdAsync(Guid id);
     Task AdicionarAsync(Lead lead);
     Task AtualizarAsync(Lead lead);
-    Task<(IReadOnlyList<Lead> Itens, int Total)> ListarAsync(string? busca, int pagina, int tamanhoPagina);
+    Task<(IReadOnlyList<Lead> Itens, int Total)> ListarAsync(string? busca, int pagina, int tamanhoPagina, Guid? grupoId = null);
 }

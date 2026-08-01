@@ -11,10 +11,11 @@ public class Lead
     public Endereco? Endereco { get; private set; }
     public string? Origem { get; private set; }
     public DateTime? DeletadoEm { get; private set; }
+    public Guid? GrupoId { get; private set; }
 
     public bool EstaAtivo => DeletadoEm is null;
 
-    public Lead(Guid id, string nome, string telefone, string? instagram, Endereco? endereco, string? origem)
+    public Lead(Guid id, string nome, string telefone, string? instagram, Endereco? endereco, string? origem, Guid? grupoId = null)
     {
         ValidarCamposObrigatorios(nome, telefone);
 
@@ -25,6 +26,7 @@ public class Lead
         Endereco = endereco;
         Origem = origem;
         DeletadoEm = null;
+        GrupoId = grupoId;
     }
 
     // Construtor privado usado pelo EF Core para materializar a entidade.
@@ -36,7 +38,7 @@ public class Lead
         TelefoneNormalizado = null!;
     }
 
-    public void AtualizarDados(string nome, string telefone, string? instagram, Endereco? endereco, string? origem)
+    public void AtualizarDados(string nome, string telefone, string? instagram, Endereco? endereco, string? origem, Guid? grupoId = null)
     {
         ValidarCamposObrigatorios(nome, telefone);
 
@@ -45,6 +47,12 @@ public class Lead
         Instagram = instagram;
         Endereco = endereco;
         Origem = origem;
+        GrupoId = grupoId;
+    }
+
+    public void AtribuirGrupo(Guid? grupoId)
+    {
+        GrupoId = grupoId;
     }
 
     public void Excluir()
@@ -57,9 +65,6 @@ public class Lead
         return new string(telefone.Where(char.IsDigit).ToArray());
     }
 
-    // Exposto como público para que casos de uso (ex.: EditarLeadUseCase) possam validar
-    // nome/telefone antes de operações que dependem deles (como normalizar o telefone
-    // para busca de duplicidade) sem duplicar a mensagem de erro em dois lugares.
     public static void ValidarCamposObrigatorios(string nome, string telefone)
     {
         if (string.IsNullOrWhiteSpace(nome))

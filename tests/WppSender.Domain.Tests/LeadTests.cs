@@ -72,4 +72,43 @@ public class LeadTests
 
         Assert.Throws<ArgumentException>(() => lead.AtualizarDados(nome!, telefone!, null, null, null));
     }
+
+    [Fact]
+    public void DeveGuardarGrupoId_QuandoInformadoNaCriacao()
+    {
+        var grupoId = Guid.NewGuid();
+        var lead = new Lead(Guid.NewGuid(), "Fulano", "11912345678", null, null, null, grupoId);
+
+        Assert.Equal(grupoId, lead.GrupoId);
+    }
+
+    [Fact]
+    public void DeveTerGrupoIdNulo_QuandoNaoInformadoNaCriacao()
+    {
+        var lead = new Lead(Guid.NewGuid(), "Fulano", "11912345678", null, null, null);
+
+        Assert.Null(lead.GrupoId);
+    }
+
+    [Fact]
+    public void AtribuirGrupo_DeveAlterarApenasOGrupoId()
+    {
+        var lead = new Lead(Guid.NewGuid(), "Fulano", "11912345678", null, null, null);
+        var grupoId = Guid.NewGuid();
+
+        lead.AtribuirGrupo(grupoId);
+
+        Assert.Equal(grupoId, lead.GrupoId);
+        Assert.Equal("Fulano", lead.Nome);
+    }
+
+    [Fact]
+    public void AtribuirGrupo_DeveLimparGrupo_QuandoChamadoComNulo()
+    {
+        var lead = new Lead(Guid.NewGuid(), "Fulano", "11912345678", null, null, null, Guid.NewGuid());
+
+        lead.AtribuirGrupo(null);
+
+        Assert.Null(lead.GrupoId);
+    }
 }

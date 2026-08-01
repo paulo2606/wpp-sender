@@ -40,13 +40,18 @@ public class EfLeadRepository : ILeadRepository
         await _db.SaveChangesAsync();
     }
 
-    public async Task<(IReadOnlyList<Lead> Itens, int Total)> ListarAsync(string? busca, int pagina, int tamanhoPagina)
+    public async Task<(IReadOnlyList<Lead> Itens, int Total)> ListarAsync(string? busca, int pagina, int tamanhoPagina, Guid? grupoId = null)
     {
         var query = _db.Leads.Include(l => l.Endereco).AsNoTracking().Where(l => l.DeletadoEm == null);
 
         if (!string.IsNullOrWhiteSpace(busca))
         {
             query = query.Where(l => l.Nome.Contains(busca) || l.TelefoneNormalizado.Contains(busca));
+        }
+
+        if (grupoId.HasValue)
+        {
+            query = query.Where(l => l.GrupoId == grupoId);
         }
 
         var total = await query.CountAsync();
