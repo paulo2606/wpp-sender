@@ -17,6 +17,7 @@ using WppSender.Infrastructure.Jobs;
 using WppSender.Infrastructure.Persistence;
 using WppSender.Infrastructure.Security;
 using WppSender.Infrastructure.Tempo;
+using WppSender.Infrastructure.WhatsApp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,6 +80,12 @@ builder.Services.AddScoped<CampanhaSendJob>();
 builder.Services.AddScoped<VarredorDeCampanhasAgendadasJob>();
 builder.Services.AddScoped<ProcessarProximoEnvioUseCase>();
 builder.Services.AddSingleton<IRelogio, RelogioSistema>();
+builder.Services.Configure<WhatsAppServiceOptions>(builder.Configuration.GetSection("WhatsAppService"));
+builder.Services.AddHttpClient<IWhatsAppClient, HttpWhatsAppClient>((serviceProvider, client) =>
+{
+    var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<WhatsAppServiceOptions>>().Value;
+    client.BaseAddress = new Uri(options.BaseUrl);
+});
 builder.Services.AddScoped<ILeadCsvParser, CsvHelperLeadParser>();
 builder.Services.AddScoped<ILeadCsvWriter, CsvHelperLeadWriter>();
 builder.Services.AddScoped<CriarLeadUseCase>();
