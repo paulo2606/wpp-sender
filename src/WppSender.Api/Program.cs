@@ -12,6 +12,7 @@ using WppSender.Domain;
 using WppSender.Infrastructure.Csv;
 using WppSender.Infrastructure.Persistence;
 using WppSender.Infrastructure.Security;
+using WppSender.Infrastructure.Tempo;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +53,11 @@ builder.Services.AddScoped<RegistrarUsuarioUseCase>();
 builder.Services.AddScoped<ILeadRepository, EfLeadRepository>();
 builder.Services.AddScoped<IGrupoRepository, EfGrupoRepository>();
 builder.Services.AddScoped<IUnitOfWork, EfUnitOfWork>();
+builder.Services.AddScoped<ICampanhaRepository, EfCampanhaRepository>();
+builder.Services.AddScoped<IEnvioRepository, EfEnvioRepository>();
+builder.Services.AddScoped<IConfiguracaoEnvioRepository, EfConfiguracaoEnvioRepository>();
+builder.Services.AddScoped<ISessaoWhatsAppRepository, EfSessaoWhatsAppRepository>();
+builder.Services.AddSingleton<IRelogio, RelogioSistema>();
 builder.Services.AddScoped<ILeadCsvParser, CsvHelperLeadParser>();
 builder.Services.AddScoped<ILeadCsvWriter, CsvHelperLeadWriter>();
 builder.Services.AddScoped<CriarLeadUseCase>();

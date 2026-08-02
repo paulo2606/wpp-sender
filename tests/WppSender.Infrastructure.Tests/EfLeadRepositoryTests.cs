@@ -151,4 +151,29 @@ public class EfLeadRepositoryTests : IAsyncLifetime
         Assert.Equal("DoGrupo", itens[0].Nome);
         Assert.Equal(grupo.Id, itens[0].GrupoId);
     }
+
+    [Fact]
+    public async Task ListarAtivosPorGrupoAsync_DeveRetornarSoAtivosDaqueleGrupo()
+    {
+        var grupoRepositorio = new EfGrupoRepository(_dbContext);
+        var repositorio = new EfLeadRepository(_dbContext);
+        var grupo = new Grupo(Guid.NewGuid(), "Grupo Ativos", null);
+        var outroGrupo = new Grupo(Guid.NewGuid(), "Outro Grupo", null);
+        await grupoRepositorio.AdicionarAsync(grupo);
+        await grupoRepositorio.AdicionarAsync(outroGrupo);
+        var grupoId = grupo.Id;
+        var ativo = new Lead(Guid.NewGuid(), "Ativo", "11911111111", null, null, null, grupoId);
+        var deOutroGrupo = new Lead(Guid.NewGuid(), "DeOutroGrupo", "11922222222", null, null, null, outroGrupo.Id);
+        var excluido = new Lead(Guid.NewGuid(), "Excluido", "11933333333", null, null, null, grupoId);
+        await repositorio.AdicionarAsync(ativo);
+        await repositorio.AdicionarAsync(deOutroGrupo);
+        await repositorio.AdicionarAsync(excluido);
+        excluido.Excluir();
+        await repositorio.AtualizarAsync(excluido);
+
+        var resultado = await repositorio.ListarAtivosPorGrupoAsync(grupoId);
+
+        Assert.Single(resultado);
+        Assert.Equal("Ativo", resultado[0].Nome);
+    }
 }

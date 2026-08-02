@@ -45,4 +45,14 @@ public class FakeLeadRepository : ILeadRepository
     }
 
     public int ContarAtivosPorGrupo(Guid grupoId) => _leads.Count(l => l.GrupoId == grupoId && l.EstaAtivo);
+
+    public Task<IReadOnlyList<Lead>> ListarAtivosPorGrupoAsync(Guid grupoId)
+    {
+        var resultado = _leads
+            .Where(l => l.GrupoId == grupoId && l.EstaAtivo)
+            .OrderBy(l => l.Nome).ThenBy(l => l.Id)
+            .ToList();
+
+        return Task.FromResult<IReadOnlyList<Lead>>(resultado);
+    }
 }

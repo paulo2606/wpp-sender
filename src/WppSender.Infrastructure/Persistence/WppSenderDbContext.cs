@@ -9,6 +9,10 @@ public class WppSenderDbContext : DbContext
     public DbSet<Lead> Leads => Set<Lead>();
     public DbSet<Endereco> Enderecos => Set<Endereco>();
     public DbSet<Grupo> Grupos => Set<Grupo>();
+    public DbSet<Campanha> Campanhas => Set<Campanha>();
+    public DbSet<Envio> Envios => Set<Envio>();
+    public DbSet<ConfiguracaoEnvio> ConfiguracoesEnvio => Set<ConfiguracaoEnvio>();
+    public DbSet<SessaoWhatsApp> SessoesWhatsApp => Set<SessaoWhatsApp>();
 
     public WppSenderDbContext(DbContextOptions<WppSenderDbContext> options) : base(options) { }
 
@@ -60,5 +64,124 @@ public class WppSenderDbContext : DbContext
                 .IsRequired(false);
             entity.HasIndex(l => l.GrupoId);
         });
+
+        modelBuilder.Entity<Campanha>(entity =>
+        {
+            entity.ToTable("campanhas", t => t.HasCheckConstraint(
+                "ck_campanhas_status",
+                "status IN ('rascunho','agendada','em_andamento','pausada','concluida')"));
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Nome).IsRequired();
+            entity.Property(c => c.Mensagem).IsRequired();
+            entity.Property(c => c.GrupoId).HasColumnName("grupo_id").IsRequired();
+            entity.Property(c => c.AgendadoPara).HasColumnName("agendado_para");
+            entity.Property(c => c.IntervaloMinSegundos).HasColumnName("intervalo_min_segundos");
+            entity.Property(c => c.IntervaloMaxSegundos).HasColumnName("intervalo_max_segundos");
+            entity.Property(c => c.Status)
+                .HasColumnName("status")
+                .HasConversion(v => StatusCampanhaParaTexto(v), v => TextoParaStatusCampanha(v));
+            entity.HasIndex(c => c.Status);
+            entity.HasIndex(c => c.GrupoId);
+        });
+
+        modelBuilder.Entity<Envio>(entity =>
+        {
+            entity.ToTable("campanha_envios", t => t.HasCheckConstraint(
+                "ck_campanha_envios_status",
+                "status IN ('pendente','enviado','falhou')"));
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CampanhaId).HasColumnName("campanha_id").IsRequired();
+            entity.Property(e => e.LeadId).HasColumnName("lead_id").IsRequired();
+            entity.Property(e => e.EnviadoEm).HasColumnName("enviado_em");
+            entity.Property(e => e.Erro).HasColumnName("erro");
+            entity.Property(e => e.Status)
+                .HasColumnName("status")
+                .HasConversion(v => StatusEnvioParaTexto(v), v => TextoParaStatusEnvio(v));
+            entity.HasIndex(e => new { e.CampanhaId, e.Status });
+            entity.HasIndex(e => e.LeadId);
+            entity.HasIndex(e => new { e.CampanhaId, e.LeadId }).IsUnique();
+        });
+
+        modelBuilder.Entity<ConfiguracaoEnvio>(entity =>
+        {
+            entity.ToTable("configuracao_envio", t => t.HasCheckConstraint("ck_configuracao_envio_id", "id = 1"));
+            entity.Property<short>("Id").HasColumnName("id");
+            entity.HasKey("Id");
+            entity.Property(c => c.LimiteDiarioEnvios).HasColumnName("limite_diario_envios");
+            entity.Property(c => c.EnviosRealizadosHoje).HasColumnName("envios_realizados_hoje");
+            entity.Property(c => c.DataReferencia).HasColumnName("data_referencia");
+            entity.HasData(new
+            {
+                Id = (short)1,
+                LimiteDiarioEnvios = 120,
+                EnviosRealizadosHoje = 0,
+                DataReferencia = new DateOnly(2020, 1, 1),
+            });
+        });
+
+        modelBuilder.Entity<SessaoWhatsApp>(entity =>
+        {
+            entity.ToTable("whatsapp_sessao", t => t.HasCheckConstraint(
+                "ck_whatsapp_sessao_status",
+                "status IN ('desconectado','aguardando_qr','conectado')"));
+            entity.Property<short>("Id").HasColumnName("id");
+            entity.HasKey("Id");
+            entity.Property(s => s.Status)
+                .HasColumnName("status")
+                .HasConversion(v => StatusSessaoParaTexto(v), v => TextoParaStatusSessao(v));
+            entity.HasData(new { Id = (short)1, Status = StatusSessaoWhatsApp.Desconectado });
+        });
     }
+
+    private static string StatusCampanhaParaTexto(StatusCampanha status) => status switch
+    {
+        StatusCampanha.Rascunho => "rascunho",
+        StatusCampanha.Agendada => "agendada",
+        StatusCampanha.EmAndamento => "em_andamento",
+        StatusCampanha.Pausada => "pausada",
+        StatusCampanha.Concluida => "concluida",
+        _ => throw new ArgumentOutOfRangeException(nameof(status)),
+    };
+
+    private static StatusCampanha TextoParaStatusCampanha(string valor) => valor switch
+    {
+        "rascunho" => StatusCampanha.Rascunho,
+        "agendada" => StatusCampanha.Agendada,
+        "em_andamento" => StatusCampanha.EmAndamento,
+        "pausada" => StatusCampanha.Pausada,
+        "concluida" => StatusCampanha.Concluida,
+        _ => throw new ArgumentOutOfRangeException(nameof(valor)),
+    };
+
+    private static string StatusEnvioParaTexto(StatusEnvio status) => status switch
+    {
+        StatusEnvio.Pendente => "pendente",
+        StatusEnvio.Enviado => "enviado",
+        StatusEnvio.Falhou => "falhou",
+        _ => throw new ArgumentOutOfRangeException(nameof(status)),
+    };
+
+    private static StatusEnvio TextoParaStatusEnvio(string valor) => valor switch
+    {
+        "pendente" => StatusEnvio.Pendente,
+        "enviado" => StatusEnvio.Enviado,
+        "falhou" => StatusEnvio.Falhou,
+        _ => throw new ArgumentOutOfRangeException(nameof(valor)),
+    };
+
+    private static string StatusSessaoParaTexto(StatusSessaoWhatsApp status) => status switch
+    {
+        StatusSessaoWhatsApp.Desconectado => "desconectado",
+        StatusSessaoWhatsApp.AguardandoQr => "aguardando_qr",
+        StatusSessaoWhatsApp.Conectado => "conectado",
+        _ => throw new ArgumentOutOfRangeException(nameof(status)),
+    };
+
+    private static StatusSessaoWhatsApp TextoParaStatusSessao(string valor) => valor switch
+    {
+        "desconectado" => StatusSessaoWhatsApp.Desconectado,
+        "aguardando_qr" => StatusSessaoWhatsApp.AguardandoQr,
+        "conectado" => StatusSessaoWhatsApp.Conectado,
+        _ => throw new ArgumentOutOfRangeException(nameof(valor)),
+    };
 }

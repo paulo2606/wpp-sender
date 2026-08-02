@@ -63,4 +63,13 @@ public class EfLeadRepository : ILeadRepository
 
         return (itens, total);
     }
+
+    public async Task<IReadOnlyList<Lead>> ListarAtivosPorGrupoAsync(Guid grupoId)
+    {
+        return await _db.Leads
+            .AsNoTracking()
+            .Where(l => l.GrupoId == grupoId && l.DeletadoEm == null)
+            .OrderBy(l => l.Nome).ThenBy(l => l.Id)
+            .ToListAsync();
+    }
 }
