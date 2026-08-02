@@ -138,4 +138,20 @@ public class EditarLeadUseCaseTests
         var atualizado = await repositorio.BuscarPorIdAsync(criado.LeadId.Value);
         Assert.Null(atualizado!.Endereco);
     }
+
+    [Fact]
+    public async Task DeveAtualizarGrupoId_QuandoInformadoNaEdicao()
+    {
+        var repositorio = new FakeLeadRepository();
+        var criarUseCase = new CriarLeadUseCase(repositorio);
+        var editarUseCase = new EditarLeadUseCase(repositorio);
+        var criado = await criarUseCase.ExecutarAsync("Fulano", "11911111111", null, null, null);
+        var grupoId = Guid.NewGuid();
+
+        var resultado = await editarUseCase.ExecutarAsync(criado.LeadId!.Value, "Fulano", "11911111111", null, null, null, grupoId);
+
+        Assert.True(resultado.Sucesso);
+        var atualizado = await repositorio.BuscarPorIdAsync(criado.LeadId.Value);
+        Assert.Equal(grupoId, atualizado!.GrupoId);
+    }
 }

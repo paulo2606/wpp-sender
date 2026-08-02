@@ -14,7 +14,7 @@ public class EditarLeadUseCase
         _repositorio = repositorio;
     }
 
-    public async Task<EditarLeadResult> ExecutarAsync(Guid id, string nome, string telefone, string? instagram, EnderecoInput? endereco, string? origem)
+    public async Task<EditarLeadResult> ExecutarAsync(Guid id, string nome, string telefone, string? instagram, EnderecoInput? endereco, string? origem, Guid? grupoId = null)
     {
         var lead = await _repositorio.BuscarPorIdAsync(id);
         if (lead is null || !lead.EstaAtivo)
@@ -60,7 +60,7 @@ public class EditarLeadUseCase
             enderecoAtualizado = new Endereco(Guid.NewGuid(), endereco.Rua, endereco.Numero, endereco.Complemento, endereco.Bairro, endereco.Cidade, endereco.Estado, endereco.Cep);
         }
 
-        lead.AtualizarDados(nome, telefone, instagram, enderecoAtualizado, origem);
+        lead.AtualizarDados(nome, telefone, instagram, enderecoAtualizado, origem, grupoId);
         await _repositorio.AtualizarAsync(lead);
 
         return EditarLeadResult.ComSucesso();

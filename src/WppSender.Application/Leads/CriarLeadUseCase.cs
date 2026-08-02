@@ -13,7 +13,7 @@ public class CriarLeadUseCase
         _repositorio = repositorio;
     }
 
-    public async Task<CriarLeadResult> ExecutarAsync(string nome, string telefone, string? instagram, EnderecoInput? endereco, string? origem)
+    public async Task<CriarLeadResult> ExecutarAsync(string nome, string telefone, string? instagram, EnderecoInput? endereco, string? origem, Guid? grupoId = null)
     {
         Lead lead;
         try
@@ -22,7 +22,7 @@ public class CriarLeadUseCase
                 ? null
                 : new Endereco(Guid.NewGuid(), endereco.Rua, endereco.Numero, endereco.Complemento, endereco.Bairro, endereco.Cidade, endereco.Estado, endereco.Cep);
 
-            lead = new Lead(Guid.NewGuid(), nome, telefone, instagram, enderecoEntidade, origem);
+            lead = new Lead(Guid.NewGuid(), nome, telefone, instagram, enderecoEntidade, origem, grupoId);
         }
         catch (ArgumentException ex)
         {

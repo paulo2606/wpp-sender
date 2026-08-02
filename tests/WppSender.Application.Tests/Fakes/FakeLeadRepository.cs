@@ -33,9 +33,16 @@ public class FakeLeadRepository : ILeadRepository
             query = query.Where(l => l.Nome.Contains(busca) || l.TelefoneNormalizado.Contains(busca));
         }
 
+        if (grupoId is not null)
+        {
+            query = query.Where(l => l.GrupoId == grupoId);
+        }
+
         var todos = query.OrderBy(l => l.Nome).ThenBy(l => l.Id).ToList();
         var pagina2 = todos.Skip((pagina - 1) * tamanhoPagina).Take(tamanhoPagina).ToList();
 
         return Task.FromResult<(IReadOnlyList<Lead>, int)>((pagina2, todos.Count));
     }
+
+    public int ContarAtivosPorGrupo(Guid grupoId) => _leads.Count(l => l.GrupoId == grupoId && l.EstaAtivo);
 }

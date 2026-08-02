@@ -82,4 +82,18 @@ public class CriarLeadUseCaseTests
 
         Assert.True(resultado.Sucesso);
     }
+
+    [Fact]
+    public async Task DeveCriarComGrupoId_QuandoInformado()
+    {
+        var repositorio = new FakeLeadRepository();
+        var useCase = new CriarLeadUseCase(repositorio);
+        var grupoId = Guid.NewGuid();
+
+        var resultado = await useCase.ExecutarAsync("Fulano", "11912345678", null, null, null, grupoId);
+
+        Assert.True(resultado.Sucesso);
+        var criado = await repositorio.BuscarPorIdAsync(resultado.LeadId!.Value);
+        Assert.Equal(grupoId, criado!.GrupoId);
+    }
 }

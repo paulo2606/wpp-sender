@@ -89,4 +89,20 @@ public class ListarLeadsUseCaseTests
         Assert.Equal(100, resultadoOversized.Itens.Count);
         Assert.Equal(100, resultadoOversized.TamanhoPagina);
     }
+
+    [Fact]
+    public async Task DeveFiltrarPorGrupoId_QuandoInformado()
+    {
+        var repositorio = new FakeLeadRepository();
+        var criarUseCase = new CriarLeadUseCase(repositorio);
+        var grupoId = Guid.NewGuid();
+        await criarUseCase.ExecutarAsync("DoGrupo", "11911111111", null, null, null, grupoId);
+        await criarUseCase.ExecutarAsync("SemGrupo", "11922222222", null, null, null);
+        var listarUseCase = new ListarLeadsUseCase(repositorio);
+
+        var resultado = await listarUseCase.ExecutarAsync(null, 1, 10, grupoId);
+
+        Assert.Equal(1, resultado.Total);
+        Assert.Equal("DoGrupo", resultado.Itens[0].Nome);
+    }
 }

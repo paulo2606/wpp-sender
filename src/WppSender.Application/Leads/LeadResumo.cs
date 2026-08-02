@@ -14,7 +14,8 @@ public record LeadResumo(
     string? Bairro,
     string? Cidade,
     string? Estado,
-    string? Cep)
+    string? Cep,
+    Guid? GrupoId)
 {
     public static LeadResumo DeLead(Lead lead) => new(
         lead.Id,
@@ -28,5 +29,6 @@ public record LeadResumo(
         lead.Endereco?.Bairro,
         lead.Endereco?.Cidade,
         lead.Endereco?.Estado,
-        lead.Endereco?.Cep);
+        lead.Endereco?.Cep,
+        lead.GrupoId);
 }
