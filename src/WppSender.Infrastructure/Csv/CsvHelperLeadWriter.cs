@@ -2,13 +2,12 @@ using System.Globalization;
 using System.Text;
 using CsvHelper;
 using WppSender.Application.Leads;
-using WppSender.Domain;
 
 namespace WppSender.Infrastructure.Csv;
 
 public class CsvHelperLeadWriter : ILeadCsvWriter
 {
-    public async Task EscreverAsync(Stream destino, IAsyncEnumerable<Lead> leads)
+    public async Task EscreverAsync(Stream destino, IAsyncEnumerable<LeadExportavel> leads)
     {
         // BOM explícito: sem ele, o Excel no Windows pt-BR interpreta o UTF-8 como
         // ANSI/Latin-1 e corrompe acentos (ex.: "São Paulo" vira "SÃ£o Paulo").
@@ -26,10 +25,12 @@ public class CsvHelperLeadWriter : ILeadCsvWriter
         csvWriter.WriteField("estado");
         csvWriter.WriteField("cep");
         csvWriter.WriteField("origem");
+        csvWriter.WriteField("grupo");
         await csvWriter.NextRecordAsync();
 
-        await foreach (var lead in leads)
+        await foreach (var exportavel in leads)
         {
+            var lead = exportavel.Lead;
             csvWriter.WriteField(SanitizarContraFormula(lead.Nome));
             csvWriter.WriteField(SanitizarContraFormula(lead.TelefoneNormalizado));
             csvWriter.WriteField(SanitizarContraFormula(lead.Instagram ?? string.Empty));
@@ -41,6 +42,7 @@ public class CsvHelperLeadWriter : ILeadCsvWriter
             csvWriter.WriteField(SanitizarContraFormula(lead.Endereco?.Estado ?? string.Empty));
             csvWriter.WriteField(SanitizarContraFormula(lead.Endereco?.Cep ?? string.Empty));
             csvWriter.WriteField(SanitizarContraFormula(lead.Origem ?? string.Empty));
+            csvWriter.WriteField(SanitizarContraFormula(exportavel.NomeGrupo ?? string.Empty));
             await csvWriter.NextRecordAsync();
         }
 

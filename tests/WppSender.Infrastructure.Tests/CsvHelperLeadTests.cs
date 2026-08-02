@@ -1,4 +1,5 @@
 using System.Text;
+using WppSender.Application.Leads;
 using WppSender.Domain;
 using WppSender.Infrastructure.Csv;
 using Xunit;
@@ -123,11 +124,36 @@ public class CsvHelperLeadTests
         Assert.Empty(linhas);
     }
 
-    private static async IAsyncEnumerable<Lead> ParaAsyncEnumerable(params Lead[] leads)
+    [Fact]
+    public async Task EscreverAsync_DeveIncluirNomeDoGrupoNaColuna()
+    {
+        var writer = new CsvHelperLeadWriter();
+        var lead = new Lead(Guid.NewGuid(), "Fulano", "11912345678", null, null, null);
+        using var destino = new MemoryStream();
+
+        await writer.EscreverAsync(destino, ParaAsyncEnumerableComGrupo(new LeadExportavel(lead, "Clientes VIP")));
+
+        destino.Position = 0;
+        var texto = new StreamReader(destino).ReadToEnd();
+        Assert.Contains("nome,telefone,instagram,rua,numero,complemento,bairro,cidade,estado,cep,origem,grupo", texto);
+        Assert.Contains("Clientes VIP", texto);
+    }
+
+    private static async IAsyncEnumerable<LeadExportavel> ParaAsyncEnumerableComGrupo(params LeadExportavel[] exportaveis)
+    {
+        foreach (var exportavel in exportaveis)
+        {
+            yield return exportavel;
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private static async IAsyncEnumerable<LeadExportavel> ParaAsyncEnumerable(params Lead[] leads)
     {
         foreach (var lead in leads)
         {
-            yield return lead;
+            yield return new LeadExportavel(lead, null);
         }
 
         await Task.CompletedTask;

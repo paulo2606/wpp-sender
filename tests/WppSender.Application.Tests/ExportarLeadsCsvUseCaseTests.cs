@@ -14,7 +14,7 @@ public class ExportarLeadsCsvUseCaseTests
         await criarUseCase.ExecutarAsync("Ana", "11911111111", null, null, null);
         await criarUseCase.ExecutarAsync("Bruno", "11922222222", null, null, null);
         var writer = new FakeLeadCsvWriter();
-        var useCase = new ExportarLeadsCsvUseCase(repositorio, writer);
+        var useCase = new ExportarLeadsCsvUseCase(repositorio, new FakeGrupoRepository(), writer);
 
         await useCase.ExecutarAsync(Stream.Null);
 
@@ -31,7 +31,7 @@ public class ExportarLeadsCsvUseCaseTests
         var excluido = await criarUseCase.ExecutarAsync("Bruno", "11922222222", null, null, null);
         await excluirUseCase.ExecutarAsync(excluido.LeadId!.Value);
         var writer = new FakeLeadCsvWriter();
-        var useCase = new ExportarLeadsCsvUseCase(repositorio, writer);
+        var useCase = new ExportarLeadsCsvUseCase(repositorio, new FakeGrupoRepository(), writer);
 
         await useCase.ExecutarAsync(Stream.Null);
 
@@ -49,11 +49,51 @@ public class ExportarLeadsCsvUseCaseTests
             await criarUseCase.ExecutarAsync($"Lead{i}", $"1191111000{i}", null, null, null);
         }
         var writer = new FakeLeadCsvWriter();
-        var useCase = new ExportarLeadsCsvUseCase(repositorio, writer, tamanhoPagina: 2);
+        var useCase = new ExportarLeadsCsvUseCase(repositorio, new FakeGrupoRepository(), writer, tamanhoPagina: 2);
 
         await useCase.ExecutarAsync(Stream.Null);
 
         Assert.Equal(5, writer.LeadsRecebidos.Count);
         Assert.Equal(5, writer.LeadsRecebidos.Select(l => l.Id).Distinct().Count());
+    }
+
+    [Fact]
+    public async Task DeveResolverNomeDoGrupo_QuandoLeadPertenceAUmGrupo()
+    {
+        var leadRepositorio = new FakeLeadRepository();
+        var grupoRepositorio = new FakeGrupoRepository();
+        var grupo = new WppSender.Domain.Grupo(Guid.NewGuid(), "Clientes VIP", null);
+        await grupoRepositorio.AdicionarAsync(grupo);
+        var criarUseCase = new CriarLeadUseCase(leadRepositorio);
+        await criarUseCase.ExecutarAsync("ComGrupo", "11911111111", null, null, null, grupo.Id);
+        await criarUseCase.ExecutarAsync("SemGrupo", "11922222222", null, null, null);
+        var writer = new FakeLeadCsvWriter();
+        var useCase = new ExportarLeadsCsvUseCase(leadRepositorio, grupoRepositorio, writer);
+
+        await useCase.ExecutarAsync(Stream.Null);
+
+        var comGrupo = writer.LeadsExportados.Single(e => e.Lead.Nome == "ComGrupo");
+        var semGrupo = writer.LeadsExportados.Single(e => e.Lead.Nome == "SemGrupo");
+        Assert.Equal("Clientes VIP", comGrupo.NomeGrupo);
+        Assert.Null(semGrupo.NomeGrupo);
+    }
+
+    [Fact]
+    public async Task DeveFiltrarPorGrupoId_QuandoInformado()
+    {
+        var leadRepositorio = new FakeLeadRepository();
+        var grupoRepositorio = new FakeGrupoRepository();
+        var grupo = new WppSender.Domain.Grupo(Guid.NewGuid(), "Grupo A", null);
+        await grupoRepositorio.AdicionarAsync(grupo);
+        var criarUseCase = new CriarLeadUseCase(leadRepositorio);
+        await criarUseCase.ExecutarAsync("DoGrupo", "11911111111", null, null, null, grupo.Id);
+        await criarUseCase.ExecutarAsync("SemGrupo", "11922222222", null, null, null);
+        var writer = new FakeLeadCsvWriter();
+        var useCase = new ExportarLeadsCsvUseCase(leadRepositorio, grupoRepositorio, writer);
+
+        await useCase.ExecutarAsync(Stream.Null, grupo.Id);
+
+        Assert.Single(writer.LeadsExportados);
+        Assert.Equal("DoGrupo", writer.LeadsExportados[0].Lead.Nome);
     }
 }

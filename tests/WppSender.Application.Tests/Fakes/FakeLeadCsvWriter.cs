@@ -5,13 +5,15 @@ namespace WppSender.Application.Tests.Fakes;
 
 public class FakeLeadCsvWriter : ILeadCsvWriter
 {
-    public List<Lead> LeadsRecebidos { get; } = new();
+    public List<LeadExportavel> LeadsExportados { get; } = new();
 
-    public async Task EscreverAsync(Stream destino, IAsyncEnumerable<Lead> leads)
+    public IReadOnlyList<Lead> LeadsRecebidos => LeadsExportados.Select(e => e.Lead).ToList();
+
+    public async Task EscreverAsync(Stream destino, IAsyncEnumerable<LeadExportavel> leads)
     {
-        await foreach (var lead in leads)
+        await foreach (var exportavel in leads)
         {
-            LeadsRecebidos.Add(lead);
+            LeadsExportados.Add(exportavel);
         }
     }
 }
