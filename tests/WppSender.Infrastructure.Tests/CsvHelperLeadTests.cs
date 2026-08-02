@@ -139,6 +139,20 @@ public class CsvHelperLeadTests
         Assert.Contains("Clientes VIP", texto);
     }
 
+    [Fact]
+    public async Task EscreverAsync_DeveSanitizarNomeDoGrupoQueComecaComCaractereDeFormula()
+    {
+        var writer = new CsvHelperLeadWriter();
+        var lead = new Lead(Guid.NewGuid(), "Fulano", "11912345678", null, null, null);
+        using var destino = new MemoryStream();
+
+        await writer.EscreverAsync(destino, ParaAsyncEnumerableComGrupo(new LeadExportavel(lead, "=cmd|'/c calc'!A1")));
+
+        destino.Position = 0;
+        var texto = new StreamReader(destino).ReadToEnd();
+        Assert.Contains("'=cmd|'/c calc'!A1", texto);
+    }
+
     private static async IAsyncEnumerable<LeadExportavel> ParaAsyncEnumerableComGrupo(params LeadExportavel[] exportaveis)
     {
         foreach (var exportavel in exportaveis)
