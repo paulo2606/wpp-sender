@@ -1,4 +1,6 @@
 using System.Text;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -6,10 +8,12 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using WppSender.Api.Middleware;
 using WppSender.Application.Auth;
+using WppSender.Application.Campanhas;
 using WppSender.Application.Grupos;
 using WppSender.Application.Leads;
 using WppSender.Domain;
 using WppSender.Infrastructure.Csv;
+using WppSender.Infrastructure.Jobs;
 using WppSender.Infrastructure.Persistence;
 using WppSender.Infrastructure.Security;
 using WppSender.Infrastructure.Tempo;
@@ -43,6 +47,19 @@ builder.Services.AddDbContext<WppSenderDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"))
            .UseSnakeCaseNamingConvention());
 
+builder.Services.AddHangfire(config => config
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(options => options.UseNpgsqlConnection(builder.Configuration.GetConnectionString("Default"))));
+
+// O worker do Hangfire não roda durante os testes de integração (WebApplicationFactory
+// usa o Environment "Testing"): os testes chamam ProcessarProximoEnvioUseCase diretamente
+// pra simular um passo do motor, de forma determinística, sem depender de um worker real.
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddHangfireServer();
+}
+
 builder.Services.AddScoped<IUsuarioRepository, EfUsuarioRepository>();
 builder.Services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
@@ -57,6 +74,10 @@ builder.Services.AddScoped<ICampanhaRepository, EfCampanhaRepository>();
 builder.Services.AddScoped<IEnvioRepository, EfEnvioRepository>();
 builder.Services.AddScoped<IConfiguracaoEnvioRepository, EfConfiguracaoEnvioRepository>();
 builder.Services.AddScoped<ISessaoWhatsAppRepository, EfSessaoWhatsAppRepository>();
+builder.Services.AddScoped<ICampanhaJobScheduler, HangfireCampanhaJobScheduler>();
+builder.Services.AddScoped<CampanhaSendJob>();
+builder.Services.AddScoped<VarredorDeCampanhasAgendadasJob>();
+builder.Services.AddScoped<ProcessarProximoEnvioUseCase>();
 builder.Services.AddSingleton<IRelogio, RelogioSistema>();
 builder.Services.AddScoped<ILeadCsvParser, CsvHelperLeadParser>();
 builder.Services.AddScoped<ILeadCsvWriter, CsvHelperLeadWriter>();
@@ -118,6 +139,14 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    RecurringJob.AddOrUpdate<VarredorDeCampanhasAgendadasJob>(
+        "varredor-campanhas-agendadas",
+        job => job.ExecutarAsync(),
+        Cron.Minutely);
+}
 
 app.Run();
 
