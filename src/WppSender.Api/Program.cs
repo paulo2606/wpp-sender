@@ -100,6 +100,17 @@ builder.Services.AddScoped<EditarGrupoUseCase>();
 builder.Services.AddScoped<ExcluirGrupoUseCase>();
 builder.Services.AddScoped<ListarGruposUseCase>();
 
+builder.Services.AddScoped<CriarCampanhaUseCase>();
+builder.Services.AddScoped<EditarCampanhaUseCase>();
+builder.Services.AddScoped<ExcluirCampanhaUseCase>();
+builder.Services.AddScoped<ListarCampanhasUseCase>();
+builder.Services.AddScoped<ObterCampanhaUseCase>();
+builder.Services.AddScoped<IniciarCampanhaUseCase>();
+builder.Services.AddScoped<PausarCampanhaUseCase>();
+builder.Services.AddScoped<RetomarCampanhaUseCase>();
+builder.Services.AddScoped<ListarEnviosFalhosUseCase>();
+builder.Services.AddScoped<ReenviarFalhasUseCase>();
+
 builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
     .Configure<Microsoft.Extensions.Options.IOptions<JwtOptions>>((bearerOptions, jwtOptions) =>
     {
