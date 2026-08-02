@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using WppSender.Api.Middleware;
 using WppSender.Application.Auth;
+using WppSender.Application.Grupos;
 using WppSender.Application.Leads;
 using WppSender.Domain;
 using WppSender.Infrastructure.Csv;
@@ -60,6 +61,10 @@ builder.Services.AddScoped<ListarLeadsUseCase>();
 builder.Services.AddScoped<ObterLeadUseCase>();
 builder.Services.AddScoped<ImportarLeadsCsvUseCase>();
 builder.Services.AddScoped<ExportarLeadsCsvUseCase>();
+builder.Services.AddScoped<CriarGrupoUseCase>();
+builder.Services.AddScoped<EditarGrupoUseCase>();
+builder.Services.AddScoped<ExcluirGrupoUseCase>();
+builder.Services.AddScoped<ListarGruposUseCase>();
 
 builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
     .Configure<Microsoft.Extensions.Options.IOptions<JwtOptions>>((bearerOptions, jwtOptions) =>
