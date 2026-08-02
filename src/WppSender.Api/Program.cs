@@ -10,6 +10,7 @@ using Microsoft.OpenApi;
 using WppSender.Api.Middleware;
 using WppSender.Application.Auth;
 using WppSender.Application.Campanhas;
+using WppSender.Application.Dashboard;
 using WppSender.Application.Grupos;
 using WppSender.Application.Leads;
 using WppSender.Domain;
@@ -114,6 +115,12 @@ builder.Services.AddScoped<ListarEnviosFalhosUseCase>();
 builder.Services.AddScoped<ReenviarFalhasUseCase>();
 builder.Services.AddScoped<IniciarSessaoWhatsAppUseCase>();
 builder.Services.AddScoped<ObterStatusSessaoUseCase>();
+
+builder.Services.AddScoped<ContarCampanhasPorStatusUseCase>();
+builder.Services.AddScoped<ContarLeadsRecentesUseCase>();
+builder.Services.AddScoped<CalcularTaxaEnvioUseCase>();
+builder.Services.AddScoped<ContarLeadsPorGrupoUseCase>();
+builder.Services.AddScoped<ObterProximaCampanhaAgendadaUseCase>();
 
 builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
     .Configure<Microsoft.Extensions.Options.IOptions<JwtOptions>>((bearerOptions, jwtOptions) =>
