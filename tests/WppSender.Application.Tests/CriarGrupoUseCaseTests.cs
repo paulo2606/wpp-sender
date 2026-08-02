@@ -74,4 +74,19 @@ public class CriarGrupoUseCaseTests
 
         Assert.False(resultado.Sucesso);
     }
+
+    [Fact]
+    public async Task DeveRetornarFalha_QuandoNomeInvalidoMesmoComLeadsValidos()
+    {
+        var leadRepositorio = new FakeLeadRepository();
+        var grupoRepositorio = new FakeGrupoRepository(leadRepositorio);
+        var criarLeadUseCase = new CriarLeadUseCase(leadRepositorio);
+        var lead1 = await criarLeadUseCase.ExecutarAsync("Lead1", "11911111111", null, null, null);
+        var useCase = new CriarGrupoUseCase(grupoRepositorio, leadRepositorio, new FakeUnitOfWork());
+
+        var resultado = await useCase.ExecutarAsync("", null, new[] { lead1.LeadId!.Value });
+
+        Assert.False(resultado.Sucesso);
+        Assert.Contains("Nome", resultado.MensagemErro);
+    }
 }
