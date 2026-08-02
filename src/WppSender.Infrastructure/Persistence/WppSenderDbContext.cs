@@ -100,6 +100,13 @@ public class WppSenderDbContext : DbContext
             entity.HasIndex(e => new { e.CampanhaId, e.Status });
             entity.HasIndex(e => e.LeadId);
             entity.HasIndex(e => new { e.CampanhaId, e.LeadId }).IsUnique();
+            // Envios são "fotografados" na criação da campanha (uma linha por lead), então
+            // deletar uma campanha em Rascunho/Agendada (único caso permitido) deve arrastar
+            // seus envios junto — diferente do padrão SetNull de Grupos, onde leads sobrevivem ao grupo.
+            entity.HasOne<Campanha>()
+                .WithMany()
+                .HasForeignKey(e => e.CampanhaId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<ConfiguracaoEnvio>(entity =>
