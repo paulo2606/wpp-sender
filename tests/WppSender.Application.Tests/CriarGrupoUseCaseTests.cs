@@ -55,6 +55,8 @@ public class CriarGrupoUseCaseTests
         Assert.Contains(idInexistente.ToString(), resultado.MensagemErro);
         var (_, total) = await grupoRepositorio.ListarComContagemAsync(1, 10);
         Assert.Equal(0, total);
+        var lead1Atualizado = await leadRepositorio.BuscarPorIdAsync(lead1.LeadId.Value);
+        Assert.Null(lead1Atualizado!.GrupoId);
     }
 
     [Fact]
