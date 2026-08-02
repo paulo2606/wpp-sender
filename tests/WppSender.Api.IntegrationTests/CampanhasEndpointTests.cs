@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Net.Http.Headers;
+using Microsoft.Extensions.DependencyInjection;
+using WppSender.Domain;
 using Xunit;
 
 namespace WppSender.Api.IntegrationTests;
@@ -95,14 +97,20 @@ public class CampanhasEndpointTests : IAsyncLifetime
         var grupoId = await CriarGrupoComLeadAsync();
         var criacao = await _client.PostAsJsonAsync("/api/campanhas", new { nome = "Campanha", mensagem = "Msg", grupoId, agendadoPara = (DateTime?)null });
         var corpo = await criacao.Content.ReadFromJsonAsync<Dictionary<string, Guid>>();
+
+        using (var escopo = _factory.Services.CreateScope())
+        {
+            var sessaoRepositorio = escopo.ServiceProvider.GetRequiredService<ISessaoWhatsAppRepository>();
+            var sessao = await sessaoRepositorio.ObterAsync();
+            sessao.MarcarConectado();
+            await sessaoRepositorio.AtualizarAsync(sessao);
+        }
+
         var iniciar = await _client.PostAsync($"/api/campanhas/{corpo!["id"]}/iniciar", null);
-        // Sem sessão conectada, iniciar falha com 400 — o teste de status "em andamento" real
-        // fica coberto nos testes de unidade/aplicação; aqui validamos só o roteamento HTTP do Conflict
-        // usando uma campanha ainda em rascunho editada com sucesso, e uma tentativa de excluir depois de iniciar falhando por outro motivo já coberto acima.
-        Assert.Equal(HttpStatusCode.BadRequest, iniciar.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, iniciar.StatusCode);
 
         var edicao = await _client.PutAsJsonAsync($"/api/campanhas/{corpo["id"]}", new { nome = "Novo Nome", mensagem = "Nova Msg", agendadoPara = (DateTime?)null, intervaloMinSegundos = 30, intervaloMaxSegundos = 90 });
-        Assert.Equal(HttpStatusCode.OK, edicao.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, edicao.StatusCode);
     }
 
     [Fact]
