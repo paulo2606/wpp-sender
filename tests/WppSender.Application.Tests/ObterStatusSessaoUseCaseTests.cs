@@ -33,4 +33,18 @@ public class ObterStatusSessaoUseCaseTests
 
         Assert.Equal(StatusSessaoWhatsApp.Desconectado, status);
     }
+
+    [Fact]
+    public async Task DeveSincronizarComoAguardandoQr_QuandoWhatsAppClientRetornaAguardandoQr()
+    {
+        var whatsAppClient = new FakeWhatsAppClient { StatusSessao = StatusSessaoWhatsApp.AguardandoQr };
+        var sessaoRepositorio = new FakeSessaoWhatsAppRepository();
+        var useCase = new ObterStatusSessaoUseCase(whatsAppClient, sessaoRepositorio);
+
+        var status = await useCase.ExecutarAsync();
+
+        Assert.Equal(StatusSessaoWhatsApp.AguardandoQr, status);
+        var sessao = await sessaoRepositorio.ObterAsync();
+        Assert.Equal(StatusSessaoWhatsApp.AguardandoQr, sessao.Status);
+    }
 }
