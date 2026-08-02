@@ -16,9 +16,12 @@ public class FakeEnvioRepository : IEnvioRepository
 
     public Task<Envio?> BuscarProximoPendenteAsync(Guid campanhaId)
     {
+        // Sem OrderBy(e => e.Id) de propósito: o Id do envio é um Guid aleatório
+        // sem relação com a ordem de inserção, então ordenar por ele tornaria o
+        // "próximo pendente" não-determinístico. A ordem natural da List (preservada
+        // pelo Where) reflete a ordem de criação dos envios (FIFO).
         var resultado = _envios
             .Where(e => e.CampanhaId == campanhaId && e.Status == StatusEnvio.Pendente)
-            .OrderBy(e => e.Id)
             .FirstOrDefault();
 
         return Task.FromResult(resultado);
