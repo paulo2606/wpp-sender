@@ -12,4 +12,5 @@ public record LeadResponse(
     string? Bairro,
     string? Cidade,
     string? Estado,
-    string? Cep);
+    string? Cep,
+    Guid? GrupoId);

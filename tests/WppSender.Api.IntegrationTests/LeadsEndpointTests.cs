@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
+using WppSender.Domain;
 using Xunit;
 
 namespace WppSender.Api.IntegrationTests;
@@ -192,6 +194,36 @@ public class LeadsEndpointTests : IAsyncLifetime
         Assert.Contains("11955555555", texto);
     }
 
+    [Fact]
+    public async Task DeveCriarLeadComGrupoIdEFiltrarNaListagemPorGrupo()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var grupoRepositorio = scope.ServiceProvider.GetRequiredService<IGrupoRepository>();
+        var grupo = new Grupo(Guid.NewGuid(), "Grupo Teste", null);
+        await grupoRepositorio.AdicionarAsync(grupo);
+
+        var criado = await _client.PostAsJsonAsync("/api/leads", new
+        {
+            nome = "ComGrupoReal",
+            telefone = "11988887777",
+            instagram = (string?)null,
+            endereco = (object?)null,
+            origem = (string?)null,
+            grupoId = grupo.Id
+        });
+        Assert.Equal(HttpStatusCode.OK, criado.StatusCode);
+        var corpo = await criado.Content.ReadFromJsonAsync<Dictionary<string, Guid>>();
+        var id = corpo!["id"];
+
+        var obtido = await _client.GetFromJsonAsync<LeadResponseTeste>($"/api/leads/{id}");
+        Assert.NotNull(obtido);
+        Assert.Equal(grupo.Id, obtido!.GrupoId);
+
+        var listagemFiltrada = await _client.GetFromJsonAsync<ListaLeadsResponseTeste>($"/api/leads?grupoId={grupo.Id}");
+        Assert.Equal(1, listagemFiltrada!.Total);
+        Assert.Equal(id, listagemFiltrada.Itens[0].Id);
+    }
+
     private record ListaLeadsResponseTeste(List<LeadResponseTeste> Itens, int Total, int Pagina, int TamanhoPagina);
 
     private record LeadResponseTeste(
@@ -206,7 +238,8 @@ public class LeadsEndpointTests : IAsyncLifetime
         string? Bairro,
         string? Cidade,
         string? Estado,
-        string? Cep);
+        string? Cep,
+        Guid? GrupoId);
 
     private record ImportarLeadsResponseTeste(int Importados, List<object> Puladas);
 }

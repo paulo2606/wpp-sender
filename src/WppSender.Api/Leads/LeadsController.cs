@@ -46,7 +46,8 @@ public class LeadsController : ControllerBase
         lead.Bairro,
         lead.Cidade,
         lead.Estado,
-        lead.Cep);
+        lead.Cep,
+        lead.GrupoId);
 
     private static EnderecoInput? ParaEnderecoInput(EnderecoRequest? request) =>
         request is null
@@ -56,7 +57,7 @@ public class LeadsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Criar([FromBody] CriarLeadRequest request)
     {
-        var resultado = await _criarUseCase.ExecutarAsync(request.Nome, request.Telefone, request.Instagram, ParaEnderecoInput(request.Endereco), request.Origem);
+        var resultado = await _criarUseCase.ExecutarAsync(request.Nome, request.Telefone, request.Instagram, ParaEnderecoInput(request.Endereco), request.Origem, request.GrupoId);
 
         if (!resultado.Sucesso)
         {
@@ -69,7 +70,7 @@ public class LeadsController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Editar(Guid id, [FromBody] EditarLeadRequest request)
     {
-        var resultado = await _editarUseCase.ExecutarAsync(id, request.Nome, request.Telefone, request.Instagram, ParaEnderecoInput(request.Endereco), request.Origem);
+        var resultado = await _editarUseCase.ExecutarAsync(id, request.Nome, request.Telefone, request.Instagram, ParaEnderecoInput(request.Endereco), request.Origem, request.GrupoId);
 
         if (!resultado.Sucesso)
         {
@@ -111,9 +112,9 @@ public class LeadsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Listar([FromQuery] string? busca, [FromQuery] int pagina = 1, [FromQuery] int tamanhoPagina = 20)
+    public async Task<IActionResult> Listar([FromQuery] string? busca, [FromQuery] int pagina = 1, [FromQuery] int tamanhoPagina = 20, [FromQuery] Guid? grupoId = null)
     {
-        var resultado = await _listarUseCase.ExecutarAsync(busca, pagina, tamanhoPagina);
+        var resultado = await _listarUseCase.ExecutarAsync(busca, pagina, tamanhoPagina, grupoId);
         var itens = resultado.Itens
             .Select(ParaLeadResponse)
             .ToList();
@@ -139,10 +140,10 @@ public class LeadsController : ControllerBase
     }
 
     [HttpGet("exportar")]
-    public async Task<IActionResult> Exportar()
+    public async Task<IActionResult> Exportar([FromQuery] Guid? grupoId = null)
     {
         var memoryStream = new MemoryStream();
-        await _exportarUseCase.ExecutarAsync(memoryStream);
+        await _exportarUseCase.ExecutarAsync(memoryStream, grupoId);
         memoryStream.Position = 0;
 
         return File(memoryStream, "text/csv", "leads.csv");
