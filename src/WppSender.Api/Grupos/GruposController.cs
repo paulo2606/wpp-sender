@@ -45,7 +45,11 @@ public class GruposController : ControllerBase
 
         if (!resultado.Sucesso)
         {
-            return NotFound(new ErroResponse(resultado.MensagemErro!));
+            return resultado.Erro switch
+            {
+                EditarGrupoErro.NaoEncontrado => NotFound(new ErroResponse(resultado.MensagemErro!)),
+                _ => BadRequest(new ErroResponse(resultado.MensagemErro!)),
+            };
         }
 
         return Ok();

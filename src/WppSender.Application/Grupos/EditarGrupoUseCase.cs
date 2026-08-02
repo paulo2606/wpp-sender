@@ -18,7 +18,7 @@ public class EditarGrupoUseCase
         var grupo = await _repositorio.BuscarPorIdAsync(id);
         if (grupo is null)
         {
-            return EditarGrupoResult.Falha(MensagemGrupoNaoEncontrado);
+            return EditarGrupoResult.Falha(MensagemGrupoNaoEncontrado, EditarGrupoErro.NaoEncontrado);
         }
 
         try

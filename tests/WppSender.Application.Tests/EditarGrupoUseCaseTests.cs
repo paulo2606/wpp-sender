@@ -33,5 +33,20 @@ public class EditarGrupoUseCaseTests
 
         Assert.False(resultado.Sucesso);
         Assert.Equal("Grupo não encontrado", resultado.MensagemErro);
+        Assert.Equal(EditarGrupoErro.NaoEncontrado, resultado.Erro);
+    }
+
+    [Fact]
+    public async Task DeveRetornarFalhaSemErroEspecifico_QuandoNomeInvalido()
+    {
+        var repositorio = new FakeGrupoRepository();
+        var grupo = new Grupo(Guid.NewGuid(), "Nome Antigo", null);
+        await repositorio.AdicionarAsync(grupo);
+        var useCase = new EditarGrupoUseCase(repositorio);
+
+        var resultado = await useCase.ExecutarAsync(grupo.Id, "", null);
+
+        Assert.False(resultado.Sucesso);
+        Assert.Null(resultado.Erro);
     }
 }

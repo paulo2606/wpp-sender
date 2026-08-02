@@ -112,6 +112,18 @@ public class GruposEndpointTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task DeveRetornarBadRequest_QuandoEditarGrupoComNomeInvalido()
+    {
+        var lead1 = await CriarLeadAsync("Lead1", "11977777777");
+        var criacao = await _client.PostAsJsonAsync("/api/grupos", new { nome = "Nome Valido", descricao = (string?)null, leadIds = new[] { lead1 } });
+        var grupoCriado = await criacao.Content.ReadFromJsonAsync<Dictionary<string, Guid>>();
+
+        var edicao = await _client.PutAsJsonAsync($"/api/grupos/{grupoCriado!["id"]}", new { nome = "", descricao = (string?)null });
+
+        Assert.Equal(HttpStatusCode.BadRequest, edicao.StatusCode);
+    }
+
+    [Fact]
     public async Task DeveRetornarNotFound_QuandoExcluirGrupoInexistente()
     {
         var resposta = await _client.DeleteAsync($"/api/grupos/{Guid.NewGuid()}");
