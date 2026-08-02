@@ -7,12 +7,18 @@ public class FakeWhatsAppClient : IWhatsAppClient
 {
     public StatusSessaoWhatsApp StatusSessao { get; set; } = StatusSessaoWhatsApp.Desconectado;
     public bool ProximoEnvioDeveFalhar { get; set; }
+    public bool ProximoEnvioDeveLancarExcecao { get; set; }
     public string MotivoFalha { get; set; } = "Falha simulada";
     public List<(string Telefone, string Mensagem)> MensagensEnviadas { get; } = new();
 
     public Task<ResultadoEnvioMensagem> EnviarMensagemAsync(string telefone, string mensagem)
     {
         MensagensEnviadas.Add((telefone, mensagem));
+
+        if (ProximoEnvioDeveLancarExcecao)
+        {
+            throw new InvalidOperationException(MotivoFalha);
+        }
 
         if (ProximoEnvioDeveFalhar)
         {

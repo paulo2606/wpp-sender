@@ -4,8 +4,6 @@ namespace WppSender.Application.Campanhas;
 
 public class ProcessarProximoEnvioUseCase
 {
-    private static readonly Random Sorteio = new();
-
     private readonly ICampanhaRepository _campanhaRepositorio;
     private readonly IEnvioRepository _envioRepositorio;
     private readonly ILeadRepository _leadRepositorio;
@@ -70,7 +68,18 @@ public class ProcessarProximoEnvioUseCase
 
         var lead = await _leadRepositorio.BuscarPorIdAsync(envio.LeadId);
         var mensagemFinal = campanha.Mensagem.Replace("{{nome}}", lead?.Nome ?? string.Empty);
-        var resultadoEnvio = await _whatsAppClient.EnviarMensagemAsync(lead?.TelefoneNormalizado ?? string.Empty, mensagemFinal);
+
+        ResultadoEnvioMensagem resultadoEnvio;
+        try
+        {
+            resultadoEnvio = await _whatsAppClient.EnviarMensagemAsync(lead?.TelefoneNormalizado ?? string.Empty, mensagemFinal);
+        }
+        catch (Exception ex)
+        {
+            // Falha de transporte (conexão recusada, timeout, DNS etc.) não pode propagar:
+            // isso derrubaria o motor e faria o Hangfire tentar novamente consumindo o cap diário.
+            resultadoEnvio = new ResultadoEnvioMensagem(false, ex.Message);
+        }
 
         if (resultadoEnvio.Sucesso)
         {
@@ -91,7 +100,7 @@ public class ProcessarProximoEnvioUseCase
             return;
         }
 
-        var atrasoSegundos = Sorteio.Next(campanha.IntervaloMinSegundos, campanha.IntervaloMaxSegundos + 1);
+        var atrasoSegundos = Random.Shared.Next(campanha.IntervaloMinSegundos, campanha.IntervaloMaxSegundos + 1);
         await _jobScheduler.AgendarProximoEnvioAsync(campanhaId, TimeSpan.FromSeconds(atrasoSegundos));
     }
 }

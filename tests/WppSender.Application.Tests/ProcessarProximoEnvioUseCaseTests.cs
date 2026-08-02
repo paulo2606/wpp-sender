@@ -80,6 +80,47 @@ public class ProcessarProximoEnvioUseCaseTests
     }
 
     [Fact]
+    public async Task DeveAgendarProximoPasso_QuandoEnvioFalhaMasAindaHaPendente()
+    {
+        var cenario = await CriarCenarioEmAndamentoAsync(quantidadeLeads: 2);
+        cenario.WhatsAppClient.ProximoEnvioDeveFalhar = true;
+        cenario.WhatsAppClient.MotivoFalha = "Número inválido";
+        var useCase = cenario.CriarUseCase();
+
+        await useCase.ExecutarAsync(cenario.CampanhaId);
+
+        var contagens = await cenario.EnvioRepositorio.ContarPorStatusAsync(cenario.CampanhaId);
+        Assert.Equal(1, contagens[StatusEnvio.Falhou]);
+        Assert.Equal(1, contagens[StatusEnvio.Pendente]);
+        // Prova que uma falha de envio não interrompe o motor: ele agenda o próximo passo
+        // em vez de parar, ainda havendo um segundo lead pendente.
+        Assert.Single(cenario.Scheduler.Agendamentos);
+        var campanha = await cenario.CampanhaRepositorio.BuscarPorIdAsync(cenario.CampanhaId);
+        Assert.Equal(StatusCampanha.EmAndamento, campanha!.Status);
+    }
+
+    [Fact]
+    public async Task DeveMarcarComoFalhouEContinuar_QuandoClienteWhatsAppLancaExcecao()
+    {
+        var cenario = await CriarCenarioEmAndamentoAsync(quantidadeLeads: 2);
+        cenario.WhatsAppClient.ProximoEnvioDeveLancarExcecao = true;
+        cenario.WhatsAppClient.MotivoFalha = "Conexão recusada";
+        var useCase = cenario.CriarUseCase();
+
+        await useCase.ExecutarAsync(cenario.CampanhaId);
+
+        var contagens = await cenario.EnvioRepositorio.ContarPorStatusAsync(cenario.CampanhaId);
+        Assert.Equal(1, contagens[StatusEnvio.Falhou]);
+        Assert.Equal(1, contagens[StatusEnvio.Pendente]);
+        // Uma exceção de transporte (ex.: HttpRequestException por conexão recusada) não pode
+        // propagar e derrubar o motor nem deixar a campanha travada — deve ser tratada como
+        // falha de envio comum e o próximo passo deve ser agendado normalmente.
+        Assert.Single(cenario.Scheduler.Agendamentos);
+        var campanha = await cenario.CampanhaRepositorio.BuscarPorIdAsync(cenario.CampanhaId);
+        Assert.Equal(StatusCampanha.EmAndamento, campanha!.Status);
+    }
+
+    [Fact]
     public async Task NaoDeveFazerNada_QuandoCampanhaNaoEstaEmAndamento()
     {
         var cenario = await CriarCenarioEmAndamentoAsync();
