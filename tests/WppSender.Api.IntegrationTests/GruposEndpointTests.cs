@@ -104,6 +104,22 @@ public class GruposEndpointTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task DeveRetornarNotFound_QuandoEditarGrupoInexistente()
+    {
+        var resposta = await _client.PutAsJsonAsync($"/api/grupos/{Guid.NewGuid()}", new { nome = "Nome", descricao = (string?)null });
+
+        Assert.Equal(HttpStatusCode.NotFound, resposta.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeveRetornarNotFound_QuandoExcluirGrupoInexistente()
+    {
+        var resposta = await _client.DeleteAsync($"/api/grupos/{Guid.NewGuid()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, resposta.StatusCode);
+    }
+
+    [Fact]
     public async Task DeveExportarCsvComColunaDeGrupo()
     {
         var lead1 = await CriarLeadAsync("ExportComGrupo", "11966666666");
