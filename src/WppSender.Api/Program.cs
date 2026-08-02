@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -23,7 +24,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -110,6 +112,8 @@ builder.Services.AddScoped<PausarCampanhaUseCase>();
 builder.Services.AddScoped<RetomarCampanhaUseCase>();
 builder.Services.AddScoped<ListarEnviosFalhosUseCase>();
 builder.Services.AddScoped<ReenviarFalhasUseCase>();
+builder.Services.AddScoped<IniciarSessaoWhatsAppUseCase>();
+builder.Services.AddScoped<ObterStatusSessaoUseCase>();
 
 builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
     .Configure<Microsoft.Extensions.Options.IOptions<JwtOptions>>((bearerOptions, jwtOptions) =>
