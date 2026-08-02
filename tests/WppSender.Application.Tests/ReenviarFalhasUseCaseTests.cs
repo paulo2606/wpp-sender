@@ -39,6 +39,37 @@ public class ReenviarFalhasUseCaseTests
     }
 
     [Fact]
+    public async Task NaoDeveReagendar_QuandoCampanhaJaEstaEmAndamento()
+    {
+        // Uma campanha em andamento já tem seu próprio encadeamento vivo, que vai pegar
+        // o envio recém-resetado no próximo passo dele mesmo. Agendar aqui criaria uma
+        // segunda cadeia paralela, reduzindo o intervalo anti-ban efetivo entre mensagens.
+        var leadRepositorio = new FakeLeadRepository();
+        var campanhaRepositorio = new FakeCampanhaRepository();
+        var envioRepositorio = new FakeEnvioRepository();
+        var grupoId = Guid.NewGuid();
+        await new CriarLeadUseCase(leadRepositorio).ExecutarAsync("Lead1", "11911111111", null, null, null, grupoId);
+        var criada = await new CriarCampanhaUseCase(campanhaRepositorio, envioRepositorio, leadRepositorio, new FakeUnitOfWork())
+            .ExecutarAsync("Campanha", "Msg", grupoId, null);
+        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.CampanhaId!.Value);
+        var envio = envioRepositorio.Todos.First(e => e.CampanhaId == campanha!.Id);
+        envio.MarcarComoFalhou("Erro");
+        await envioRepositorio.AtualizarAsync(envio);
+        campanha!.Iniciar();
+        await campanhaRepositorio.AtualizarAsync(campanha);
+        var scheduler = new FakeCampanhaJobScheduler();
+        var useCase = new ReenviarFalhasUseCase(campanhaRepositorio, envioRepositorio, scheduler);
+
+        await useCase.ExecutarAsync(campanha.Id);
+
+        var contagens = await envioRepositorio.ContarPorStatusAsync(campanha.Id);
+        Assert.Equal(1, contagens[StatusEnvio.Pendente]);
+        var recarregada = await campanhaRepositorio.BuscarPorIdAsync(campanha.Id);
+        Assert.Equal(StatusCampanha.EmAndamento, recarregada!.Status);
+        Assert.Empty(scheduler.Agendamentos);
+    }
+
+    [Fact]
     public async Task NaoDeveReagendar_QuandoNaoHaFalhos()
     {
         var leadRepositorio = new FakeLeadRepository();
