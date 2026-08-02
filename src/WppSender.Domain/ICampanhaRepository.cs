@@ -8,4 +8,6 @@ public interface ICampanhaRepository
     Task RemoverAsync(Campanha campanha);
     Task<(IReadOnlyList<Campanha> Itens, int Total)> ListarAsync(StatusCampanha? status, int pagina, int tamanhoPagina);
     Task<IReadOnlyList<Campanha>> ListarAgendadasParaIniciarAsync(DateTime agora);
+    Task<IReadOnlyDictionary<StatusCampanha, int>> ContarPorStatusAsync();
+    Task<Campanha?> ObterProximaAgendadaAsync();
 }

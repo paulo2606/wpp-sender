@@ -23,6 +23,7 @@ public class EnvioTests
 
         Assert.Equal(StatusEnvio.Enviado, envio.Status);
         Assert.Equal(agora, envio.EnviadoEm);
+        Assert.Equal(agora, envio.AtualizadoEm);
         Assert.Null(envio.Erro);
     }
 
@@ -38,6 +39,16 @@ public class EnvioTests
     }
 
     [Fact]
+    public void MarcarComoFalhou_DeveRegistrarAtualizadoEm()
+    {
+        var envio = new Envio(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+
+        envio.MarcarComoFalhou("Número inválido");
+
+        Assert.NotNull(envio.AtualizadoEm);
+    }
+
+    [Fact]
     public void Resetar_DeveVoltarParaPendenteELimparErro()
     {
         var envio = new Envio(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
@@ -48,5 +59,6 @@ public class EnvioTests
         Assert.Equal(StatusEnvio.Pendente, envio.Status);
         Assert.Null(envio.Erro);
         Assert.Null(envio.EnviadoEm);
+        Assert.Null(envio.AtualizadoEm);
     }
 }

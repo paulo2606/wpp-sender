@@ -7,6 +7,7 @@ public class Envio
     public Guid LeadId { get; private set; }
     public StatusEnvio Status { get; private set; }
     public DateTime? EnviadoEm { get; private set; }
+    public DateTime? AtualizadoEm { get; private set; }
     public string? Erro { get; private set; }
 
     public Envio(Guid id, Guid campanhaId, Guid leadId)
@@ -23,6 +24,7 @@ public class Envio
     {
         Status = StatusEnvio.Enviado;
         EnviadoEm = agora;
+        AtualizadoEm = agora;
         Erro = null;
     }
 
@@ -30,6 +32,7 @@ public class Envio
     {
         Status = StatusEnvio.Falhou;
         Erro = motivo;
+        AtualizadoEm = DateTime.UtcNow;
     }
 
     public void Resetar()
@@ -37,5 +40,6 @@ public class Envio
         Status = StatusEnvio.Pendente;
         EnviadoEm = null;
         Erro = null;
+        AtualizadoEm = null;
     }
 }

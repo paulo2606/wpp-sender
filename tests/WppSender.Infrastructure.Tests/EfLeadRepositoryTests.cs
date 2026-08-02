@@ -176,4 +176,24 @@ public class EfLeadRepositoryTests : IAsyncLifetime
         Assert.Single(resultado);
         Assert.Equal("Ativo", resultado[0].Nome);
     }
+
+    [Fact]
+    public async Task ContarAtivosCriadosDesdeAsync_DeveExcluirLeadsForaDaJanelaEExcluidos()
+    {
+        var repositorio = new EfLeadRepository(_dbContext);
+        var recente = new Lead(Guid.NewGuid(), "Recente", "11911111111", null, null, null);
+        var antigo = new Lead(Guid.NewGuid(), "Antigo", "11922222222", null, null, null);
+        var excluidoRecente = new Lead(Guid.NewGuid(), "ExcluidoRecente", "11933333333", null, null, null);
+        await repositorio.AdicionarAsync(recente);
+        await repositorio.AdicionarAsync(antigo);
+        await repositorio.AdicionarAsync(excluidoRecente);
+        excluidoRecente.Excluir();
+        await repositorio.AtualizarAsync(excluidoRecente);
+        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE leads SET criado_em = {DateTime.UtcNow.AddDays(-10)} WHERE id = {antigo.Id}");
+
+        var resultado = await repositorio.ContarAtivosCriadosDesdeAsync(DateTime.UtcNow.AddDays(-7));
+
+        Assert.Equal(1, resultado);
+    }
 }

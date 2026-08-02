@@ -46,4 +46,23 @@ public class FakeCampanhaRepository : ICampanhaRepository
 
         return Task.FromResult<IReadOnlyList<Campanha>>(resultado);
     }
+
+    public Task<IReadOnlyDictionary<StatusCampanha, int>> ContarPorStatusAsync()
+    {
+        var contagens = _campanhas
+            .GroupBy(c => c.Status)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        return Task.FromResult<IReadOnlyDictionary<StatusCampanha, int>>(contagens);
+    }
+
+    public Task<Campanha?> ObterProximaAgendadaAsync()
+    {
+        var resultado = _campanhas
+            .Where(c => c.Status == StatusCampanha.Agendada && c.AgendadoPara != null)
+            .OrderBy(c => c.AgendadoPara)
+            .FirstOrDefault();
+
+        return Task.FromResult(resultado);
+    }
 }

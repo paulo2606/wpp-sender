@@ -63,6 +63,8 @@ public class WppSenderDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull)
                 .IsRequired(false);
             entity.HasIndex(l => l.GrupoId);
+            entity.Property(l => l.CriadoEm).HasColumnName("criado_em").IsRequired();
+            entity.HasIndex(l => l.CriadoEm);
         });
 
         modelBuilder.Entity<Campanha>(entity =>
@@ -93,6 +95,7 @@ public class WppSenderDbContext : DbContext
             entity.Property(e => e.CampanhaId).HasColumnName("campanha_id").IsRequired();
             entity.Property(e => e.LeadId).HasColumnName("lead_id").IsRequired();
             entity.Property(e => e.EnviadoEm).HasColumnName("enviado_em");
+            entity.Property(e => e.AtualizadoEm).HasColumnName("atualizado_em");
             entity.Property(e => e.Erro).HasColumnName("erro");
             entity.Property(e => e.Status)
                 .HasColumnName("status")

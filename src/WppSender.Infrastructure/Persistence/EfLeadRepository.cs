@@ -72,4 +72,22 @@ public class EfLeadRepository : ILeadRepository
             .OrderBy(l => l.Nome).ThenBy(l => l.Id)
             .ToListAsync();
     }
+
+    public async Task<int> ContarAtivosCriadosDesdeAsync(DateTime desde)
+    {
+        return await _db.Leads
+            .Where(l => l.DeletadoEm == null && l.CriadoEm >= desde)
+            .CountAsync();
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, int>> ContarAtivosPorGrupoAsync()
+    {
+        var contagens = await _db.Leads
+            .Where(l => l.DeletadoEm == null && l.GrupoId != null)
+            .GroupBy(l => l.GrupoId!.Value)
+            .Select(g => new { GrupoId = g.Key, Quantidade = g.Count() })
+            .ToListAsync();
+
+        return contagens.ToDictionary(c => c.GrupoId, c => c.Quantidade);
+    }
 }

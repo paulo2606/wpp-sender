@@ -7,4 +7,5 @@ public interface IEnvioRepository
     Task<Envio?> BuscarProximoPendenteAsync(Guid campanhaId);
     Task<IReadOnlyDictionary<StatusEnvio, int>> ContarPorStatusAsync(Guid campanhaId);
     Task<IReadOnlyList<Envio>> ListarFalhosAsync(Guid campanhaId);
+    Task<IReadOnlyDictionary<StatusEnvio, int>> ContarTodosPorStatusAsync();
 }

@@ -48,6 +48,21 @@ public class VarredorDeCampanhasAgendadasJobTests
                 .ToList();
             return Task.FromResult<IReadOnlyList<Campanha>>(vencidas);
         }
+
+        public Task<IReadOnlyDictionary<StatusCampanha, int>> ContarPorStatusAsync()
+        {
+            var contagens = Campanhas.GroupBy(c => c.Status).ToDictionary(g => g.Key, g => g.Count());
+            return Task.FromResult<IReadOnlyDictionary<StatusCampanha, int>>(contagens);
+        }
+
+        public Task<Campanha?> ObterProximaAgendadaAsync()
+        {
+            var resultado = Campanhas
+                .Where(c => c.Status == StatusCampanha.Agendada && c.AgendadoPara != null)
+                .OrderBy(c => c.AgendadoPara)
+                .FirstOrDefault();
+            return Task.FromResult(resultado);
+        }
     }
 
     private class FakeSessaoWhatsAppRepository : ISessaoWhatsAppRepository

@@ -64,4 +64,22 @@ public class EfCampanhaRepository : ICampanhaRepository
             .Where(c => c.Status == StatusCampanha.Agendada && c.AgendadoPara != null && c.AgendadoPara <= agora)
             .ToListAsync();
     }
+
+    public async Task<IReadOnlyDictionary<StatusCampanha, int>> ContarPorStatusAsync()
+    {
+        var contagens = await _db.Campanhas
+            .GroupBy(c => c.Status)
+            .Select(g => new { Status = g.Key, Quantidade = g.Count() })
+            .ToListAsync();
+
+        return contagens.ToDictionary(c => c.Status, c => c.Quantidade);
+    }
+
+    public async Task<Campanha?> ObterProximaAgendadaAsync()
+    {
+        return await _db.Campanhas
+            .Where(c => c.Status == StatusCampanha.Agendada && c.AgendadoPara != null)
+            .OrderBy(c => c.AgendadoPara)
+            .FirstOrDefaultAsync();
+    }
 }

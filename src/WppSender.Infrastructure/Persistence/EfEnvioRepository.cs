@@ -55,4 +55,14 @@ public class EfEnvioRepository : IEnvioRepository
             .OrderBy(e => e.Id)
             .ToListAsync();
     }
+
+    public async Task<IReadOnlyDictionary<StatusEnvio, int>> ContarTodosPorStatusAsync()
+    {
+        var contagens = await _db.Envios
+            .GroupBy(e => e.Status)
+            .Select(g => new { Status = g.Key, Quantidade = g.Count() })
+            .ToListAsync();
+
+        return contagens.ToDictionary(c => c.Status, c => c.Quantidade);
+    }
 }

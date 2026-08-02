@@ -8,4 +8,6 @@ public interface ILeadRepository
     Task AtualizarAsync(Lead lead);
     Task<(IReadOnlyList<Lead> Itens, int Total)> ListarAsync(string? busca, int pagina, int tamanhoPagina, Guid? grupoId = null);
     Task<IReadOnlyList<Lead>> ListarAtivosPorGrupoAsync(Guid grupoId);
+    Task<int> ContarAtivosCriadosDesdeAsync(DateTime desde);
+    Task<IReadOnlyDictionary<Guid, int>> ContarAtivosPorGrupoAsync();
 }

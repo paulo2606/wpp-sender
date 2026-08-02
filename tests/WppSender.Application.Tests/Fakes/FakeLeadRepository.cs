@@ -55,4 +55,21 @@ public class FakeLeadRepository : ILeadRepository
 
         return Task.FromResult<IReadOnlyList<Lead>>(resultado);
     }
+
+    public Task<int> ContarAtivosCriadosDesdeAsync(DateTime desde)
+    {
+        var resultado = _leads.Count(l => l.EstaAtivo && l.CriadoEm >= desde);
+
+        return Task.FromResult(resultado);
+    }
+
+    public Task<IReadOnlyDictionary<Guid, int>> ContarAtivosPorGrupoAsync()
+    {
+        var contagens = _leads
+            .Where(l => l.EstaAtivo && l.GrupoId != null)
+            .GroupBy(l => l.GrupoId!.Value)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        return Task.FromResult<IReadOnlyDictionary<Guid, int>>(contagens);
+    }
 }

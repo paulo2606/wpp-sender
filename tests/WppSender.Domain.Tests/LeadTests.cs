@@ -111,4 +111,15 @@ public class LeadTests
 
         Assert.Null(lead.GrupoId);
     }
+
+    [Fact]
+    public void DeveRegistrarCriadoEm_QuandoCriado()
+    {
+        var antes = DateTime.UtcNow;
+
+        var lead = new Lead(Guid.NewGuid(), "Fulano", "11912345678", null, null, null);
+
+        Assert.True(lead.CriadoEm >= antes);
+        Assert.True(lead.CriadoEm <= DateTime.UtcNow);
+    }
 }

@@ -12,6 +12,7 @@ public class Lead
     public string? Origem { get; private set; }
     public DateTime? DeletadoEm { get; private set; }
     public Guid? GrupoId { get; private set; }
+    public DateTime CriadoEm { get; private set; }
 
     public bool EstaAtivo => DeletadoEm is null;
 
@@ -27,6 +28,7 @@ public class Lead
         Origem = origem;
         DeletadoEm = null;
         GrupoId = grupoId;
+        CriadoEm = DateTime.UtcNow;
     }
 
     // Construtor privado usado pelo EF Core para materializar a entidade.

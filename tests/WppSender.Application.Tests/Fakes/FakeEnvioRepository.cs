@@ -47,6 +47,15 @@ public class FakeEnvioRepository : IEnvioRepository
         return Task.FromResult<IReadOnlyList<Envio>>(resultado);
     }
 
+    public Task<IReadOnlyDictionary<StatusEnvio, int>> ContarTodosPorStatusAsync()
+    {
+        var contagens = _envios
+            .GroupBy(e => e.Status)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        return Task.FromResult<IReadOnlyDictionary<StatusEnvio, int>>(contagens);
+    }
+
     // Exposto pros testes do motor de envio (Task 6) inspecionarem o estado bruto.
     public IReadOnlyList<Envio> Todos => _envios;
 }
