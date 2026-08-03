@@ -201,7 +201,9 @@ app.MapControllers();
 
 if (!app.Environment.IsEnvironment("Testing"))
 {
-    RecurringJob.AddOrUpdate<VarredorDeCampanhasAgendadasJob>(
+    using var escopo = app.Services.CreateScope();
+    var recurringJobManager = escopo.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    recurringJobManager.AddOrUpdate<VarredorDeCampanhasAgendadasJob>(
         "varredor-campanhas-agendadas",
         job => job.ExecutarAsync(),
         Cron.Minutely);
