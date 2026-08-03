@@ -69,4 +69,33 @@ public class AuthEndpointTests : IAsyncLifetime
         var corpo = await resposta.Content.ReadFromJsonAsync<Dictionary<string, string>>();
         Assert.Equal("Email ou senha inválidos", corpo!["message"]);
     }
+
+    [Fact]
+    public async Task DeveRetornar429_QuandoExcedeLimiteDeTentativasDeLogin()
+    {
+        var client = _factory.CreateClient();
+        await client.PostAsJsonAsync("/api/auth/registrar", new { email = Email, senha = Senha });
+
+        for (var i = 0; i < 5; i++)
+        {
+            await client.PostAsJsonAsync("/api/auth/login", new { email = Email, senha = "senhaErrada" });
+        }
+
+        var resposta = await client.PostAsJsonAsync("/api/auth/login", new { email = Email, senha = "senhaErrada" });
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, resposta.StatusCode);
+    }
+
+    [Fact]
+    public async Task DevePermitirApenasUmRegistro_QuandoDuasRequisicoesConcorrentesChegamAntesDoPrimeiroExistir()
+    {
+        var client = _factory.CreateClient();
+
+        var tarefa1 = client.PostAsJsonAsync("/api/auth/registrar", new { email = "concorrente1@teste.com", senha = Senha });
+        var tarefa2 = client.PostAsJsonAsync("/api/auth/registrar", new { email = "concorrente2@teste.com", senha = Senha });
+        var respostas = await Task.WhenAll(tarefa1, tarefa2);
+
+        Assert.Equal(1, respostas.Count(r => r.StatusCode == HttpStatusCode.OK));
+        Assert.Equal(1, respostas.Count(r => r.StatusCode == HttpStatusCode.Conflict));
+    }
 }

@@ -2,8 +2,10 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Hangfire;
 using Hangfire.PostgreSql;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -27,6 +29,29 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter("login", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 5;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueLimit = 0;
+    });
+});
+
+var origensPermitidas = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        if (origensPermitidas.Length > 0)
+        {
+            policy.WithOrigins(origensPermitidas).AllowAnyHeader().AllowAnyMethod();
+        }
+    });
+});
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -88,6 +113,7 @@ builder.Services.AddHttpClient<IWhatsAppClient, HttpWhatsAppClient>((serviceProv
 {
     var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<WhatsAppServiceOptions>>().Value;
     client.BaseAddress = new Uri(options.BaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(15);
 });
 builder.Services.AddScoped<ILeadCsvParser, CsvHelperLeadParser>();
 builder.Services.AddScoped<ILeadCsvWriter, CsvHelperLeadWriter>();
@@ -163,6 +189,10 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
+
+app.UseRateLimiter();
+
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();

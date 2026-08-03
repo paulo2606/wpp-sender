@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using WppSender.Domain;
 
 namespace WppSender.Infrastructure.Persistence;
@@ -25,6 +26,14 @@ public class EfUsuarioRepository : IUsuarioRepository
     public async Task AdicionarAsync(Usuario usuario)
     {
         await _db.Usuarios.AddAsync(usuario);
-        await _db.SaveChangesAsync();
+
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" })
+        {
+            throw new InvalidOperationException("Já existe um usuário cadastrado", ex);
+        }
     }
 }

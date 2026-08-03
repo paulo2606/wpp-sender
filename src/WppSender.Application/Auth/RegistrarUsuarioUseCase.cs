@@ -23,7 +23,15 @@ public class RegistrarUsuarioUseCase
         }
 
         var usuario = new Usuario(Guid.NewGuid(), email, _hasher.Hash(senha));
-        await _repositorio.AdicionarAsync(usuario);
+
+        try
+        {
+            await _repositorio.AdicionarAsync(usuario);
+        }
+        catch (InvalidOperationException)
+        {
+            return RegistroResult.Falha(MensagemCadastroIndisponivel);
+        }
 
         return RegistroResult.ComSucesso();
     }

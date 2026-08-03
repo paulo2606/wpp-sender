@@ -122,12 +122,20 @@ public class LeadsController : ControllerBase
         return Ok(new ListaLeadsResponse(itens, resultado.Total, resultado.Pagina, resultado.TamanhoPagina));
     }
 
+    private const long TamanhoMaximoArquivoImportacaoBytes = 5 * 1024 * 1024;
+
     [HttpPost("importar")]
+    [RequestSizeLimit(TamanhoMaximoArquivoImportacaoBytes)]
     public async Task<IActionResult> Importar(IFormFile? arquivo)
     {
         if (arquivo is null || arquivo.Length == 0)
         {
             return BadRequest(new ErroResponse("Arquivo CSV obrigatório"));
+        }
+
+        if (arquivo.Length > TamanhoMaximoArquivoImportacaoBytes)
+        {
+            return BadRequest(new ErroResponse("Arquivo CSV excede o tamanho máximo permitido de 5MB"));
         }
 
         await using var stream = arquivo.OpenReadStream();

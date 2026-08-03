@@ -140,6 +140,20 @@ public class LeadsEndpointTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task DeveRejeitarImportacao_QuandoArquivoExcedeTamanhoMaximo()
+    {
+        using var conteudo = new MultipartFormDataContent();
+        var bytesGrandes = new byte[6 * 1024 * 1024];
+        var arquivo = new ByteArrayContent(bytesGrandes);
+        arquivo.Headers.ContentType = new MediaTypeHeaderValue("text/csv");
+        conteudo.Add(arquivo, "arquivo", "leads.csv");
+
+        var resposta = await _client.PostAsync("/api/leads/importar", conteudo);
+
+        Assert.NotEqual(HttpStatusCode.OK, resposta.StatusCode);
+    }
+
+    [Fact]
     public async Task DeveRetornarConflito_QuandoCriaComTelefoneDuplicado()
     {
         await _client.PostAsJsonAsync("/api/leads", new { nome = "Um", telefone = "11911111111", instagram = (string?)null, endereco = (object?)null, origem = (string?)null });
