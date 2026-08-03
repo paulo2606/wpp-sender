@@ -114,6 +114,7 @@ builder.Services.AddHttpClient<IWhatsAppClient, HttpWhatsAppClient>((serviceProv
     var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<WhatsAppServiceOptions>>().Value;
     client.BaseAddress = new Uri(options.BaseUrl);
     client.Timeout = TimeSpan.FromSeconds(15);
+    client.DefaultRequestHeaders.Add("X-Api-Key", options.ApiKey);
 });
 builder.Services.AddScoped<ILeadCsvParser, CsvHelperLeadParser>();
 builder.Services.AddScoped<ILeadCsvWriter, CsvHelperLeadWriter>();
