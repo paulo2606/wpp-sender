@@ -90,6 +90,16 @@ public class Campanha
         Status = StatusCampanha.Concluida;
     }
 
+    public void Cancelar()
+    {
+        if (Status != StatusCampanha.Pausada)
+        {
+            throw new InvalidOperationException("Campanha só pode ser cancelada quando está pausada");
+        }
+
+        Status = StatusCampanha.Cancelada;
+    }
+
     // Usado pelo reenvio de falhas: uma campanha já concluída que ganha
     // envios pendentes de novo precisa voltar a rodar no motor.
     public void ReabrirParaReenvio()

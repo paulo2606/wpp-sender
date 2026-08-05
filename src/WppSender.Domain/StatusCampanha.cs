@@ -7,4 +7,5 @@ public enum StatusCampanha
     EmAndamento,
     Pausada,
     Concluida,
+    Cancelada,
 }

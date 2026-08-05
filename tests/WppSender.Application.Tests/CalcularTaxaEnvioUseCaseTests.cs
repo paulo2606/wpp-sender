@@ -12,7 +12,7 @@ public class CalcularTaxaEnvioUseCaseTests
     {
         var envioRepositorio = new FakeEnvioRepository();
         var enviado = new Envio(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
-        enviado.MarcarComoEnviado(DateTime.UtcNow);
+        enviado.MarcarComoEnviado(DateTime.UtcNow, "wamid.1");
         var falhou = new Envio(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         falhou.MarcarComoFalhou("erro");
         var pendente = new Envio(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());

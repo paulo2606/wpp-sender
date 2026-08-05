@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Web;
 using Microsoft.Extensions.Logging;
 using WppSender.Application.Campanhas;
 using WppSender.Domain;
@@ -26,7 +27,8 @@ public class HttpWhatsAppClient : IWhatsAppClient
             return new ResultadoEnvioMensagem(false, corpoErro);
         }
 
-        return new ResultadoEnvioMensagem(true, null);
+        var corpo = await resposta.Content.ReadFromJsonAsync<EnviarMensagemRespostaDto>();
+        return new ResultadoEnvioMensagem(true, null, corpo?.MensagemId);
     }
 
     public async Task<string> IniciarSessaoAsync()
@@ -78,6 +80,43 @@ public class HttpWhatsAppClient : IWhatsAppClient
         }
     }
 
+    public async Task<IReadOnlyDictionary<string, StatusEntregaMensagem>> ObterStatusMensagensAsync(IReadOnlyCollection<string> mensagemIds)
+    {
+        if (mensagemIds.Count == 0)
+        {
+            return new Dictionary<string, StatusEntregaMensagem>();
+        }
+
+        try
+        {
+            var query = HttpUtility.UrlEncode(string.Join(',', mensagemIds));
+            var resposta = await _httpClient.GetAsync($"mensagens/status?ids={query}");
+
+            if (!resposta.IsSuccessStatusCode)
+            {
+                _logger.LogError("Falha ao obter status de mensagens do WhatsApp: status {StatusCode}", resposta.StatusCode);
+                return new Dictionary<string, StatusEntregaMensagem>();
+            }
+
+            var corpo = await resposta.Content.ReadFromJsonAsync<Dictionary<string, string>>() ?? new();
+            return corpo.ToDictionary(par => par.Key, par => ParaStatusEntregaMensagem(par.Value));
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            _logger.LogError(ex, "Falha ao comunicar com o microservico do WhatsApp ao obter status de mensagens");
+            return new Dictionary<string, StatusEntregaMensagem>();
+        }
+    }
+
+    private static StatusEntregaMensagem ParaStatusEntregaMensagem(string valor) => valor switch
+    {
+        "entregue" => StatusEntregaMensagem.Entregue,
+        "lido" => StatusEntregaMensagem.Lido,
+        "erro" => StatusEntregaMensagem.Erro,
+        _ => StatusEntregaMensagem.Pendente,
+    };
+
     private record IniciarSessaoRespostaDto(string QrCodeBase64);
     private record StatusSessaoRespostaDto(string Status);
+    private record EnviarMensagemRespostaDto(string? MensagemId);
 }

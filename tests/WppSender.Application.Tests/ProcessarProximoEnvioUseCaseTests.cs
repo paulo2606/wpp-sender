@@ -74,7 +74,8 @@ public class ProcessarProximoEnvioUseCaseTests
 
         var contagens = await cenario.EnvioRepositorio.ContarPorStatusAsync(cenario.CampanhaId);
         Assert.Equal(1, contagens[StatusEnvio.Falhou]);
-        // Mesmo com falha no envio, o motor segue: como não sobrou pendente, conclui em vez de reagendar.
+        // Sem nenhum envio "Enviado" aguardando confirmação, não há nada a esperar do job de
+        // ACK: o motor conclui direto, senão a campanha ficaria travada em EmAndamento pra sempre.
         var campanha = await cenario.CampanhaRepositorio.BuscarPorIdAsync(cenario.CampanhaId);
         Assert.Equal(StatusCampanha.Concluida, campanha!.Status);
     }
@@ -166,17 +167,17 @@ public class ProcessarProximoEnvioUseCaseTests
     }
 
     [Fact]
-    public async Task DeveConcluirCampanha_QuandoNaoSobraPendente()
+    public async Task NaoDeveReagendarNemConcluir_QuandoNaoSobraPendente()
     {
         var cenario = await CriarCenarioEmAndamentoAsync(quantidadeLeads: 1);
         var useCase = cenario.CriarUseCase();
-        await useCase.ExecutarAsync(cenario.CampanhaId);
-        cenario.Scheduler.Agendamentos.Clear();
 
         await useCase.ExecutarAsync(cenario.CampanhaId);
 
+        // Envio único despachado, sem pendente restante: o motor para de agendar, mas a
+        // campanha continua EmAndamento até o AtualizarStatusEntregaUseCase confirmar a entrega.
         var campanha = await cenario.CampanhaRepositorio.BuscarPorIdAsync(cenario.CampanhaId);
-        Assert.Equal(StatusCampanha.Concluida, campanha!.Status);
+        Assert.Equal(StatusCampanha.EmAndamento, campanha!.Status);
         Assert.Empty(cenario.Scheduler.Agendamentos);
     }
 }

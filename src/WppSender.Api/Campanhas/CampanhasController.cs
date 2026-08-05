@@ -17,6 +17,7 @@ public class CampanhasController : ControllerBase
     private readonly IniciarCampanhaUseCase _iniciarUseCase;
     private readonly PausarCampanhaUseCase _pausarUseCase;
     private readonly RetomarCampanhaUseCase _retomarUseCase;
+    private readonly CancelarCampanhaUseCase _cancelarUseCase;
     private readonly ListarEnviosFalhosUseCase _listarEnviosFalhosUseCase;
     private readonly ReenviarFalhasUseCase _reenviarFalhasUseCase;
 
@@ -29,6 +30,7 @@ public class CampanhasController : ControllerBase
         IniciarCampanhaUseCase iniciarUseCase,
         PausarCampanhaUseCase pausarUseCase,
         RetomarCampanhaUseCase retomarUseCase,
+        CancelarCampanhaUseCase cancelarUseCase,
         ListarEnviosFalhosUseCase listarEnviosFalhosUseCase,
         ReenviarFalhasUseCase reenviarFalhasUseCase)
     {
@@ -40,6 +42,7 @@ public class CampanhasController : ControllerBase
         _iniciarUseCase = iniciarUseCase;
         _pausarUseCase = pausarUseCase;
         _retomarUseCase = retomarUseCase;
+        _cancelarUseCase = cancelarUseCase;
         _listarEnviosFalhosUseCase = listarEnviosFalhosUseCase;
         _reenviarFalhasUseCase = reenviarFalhasUseCase;
     }
@@ -114,7 +117,13 @@ public class CampanhasController : ControllerBase
         return Ok(new
         {
             campanha = ParaCampanhaResponse(resultado.Campanha),
-            progresso = new ProgressoResponse(resultado.Progresso.Pendente, resultado.Progresso.Enviado, resultado.Progresso.Falhou),
+            progresso = new ProgressoResponse(
+                resultado.Progresso.Pendente,
+                resultado.Progresso.Enviado,
+                resultado.Progresso.Entregue,
+                resultado.Progresso.Lido,
+                resultado.Progresso.Falhou,
+                resultado.Progresso.FalhouEntrega),
         });
     }
 
@@ -165,6 +174,23 @@ public class CampanhasController : ControllerBase
                 RetomarCampanhaErro.NaoEncontrada => NotFound(new ErroResponse(resultado.MensagemErro!)),
                 RetomarCampanhaErro.StatusInvalido => Conflict(new ErroResponse(resultado.MensagemErro!)),
                 _ => BadRequest(new ErroResponse(resultado.MensagemErro!)),
+            };
+        }
+
+        return Ok();
+    }
+
+    [HttpPost("{id:guid}/cancelar")]
+    public async Task<IActionResult> Cancelar(Guid id)
+    {
+        var resultado = await _cancelarUseCase.ExecutarAsync(id);
+
+        if (!resultado.Sucesso)
+        {
+            return resultado.Erro switch
+            {
+                CancelarCampanhaErro.NaoEncontrada => NotFound(new ErroResponse(resultado.MensagemErro!)),
+                _ => Conflict(new ErroResponse(resultado.MensagemErro!)),
             };
         }
 

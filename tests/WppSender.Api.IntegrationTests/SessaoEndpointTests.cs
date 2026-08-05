@@ -86,9 +86,17 @@ public class SessaoEndpointTests : IAsyncLifetime
             await processarUseCase.ExecutarAsync(campanhaCorpo["id"]);
         }
 
+        using (var escopo = _factory.Services.CreateScope())
+        {
+            // Quem conclui a campanha agora é o job de confirmação de entrega, não mais
+            // o motor de disparo — simula um ciclo do AtualizarStatusEntregaJob.
+            var atualizarStatusUseCase = escopo.ServiceProvider.GetRequiredService<AtualizarStatusEntregaUseCase>();
+            await atualizarStatusUseCase.ExecutarAsync();
+        }
+
         var detalhe = await _client.GetAsync($"/api/campanhas/{campanhaCorpo["id"]}");
         var detalheTexto = await detalhe.Content.ReadAsStringAsync();
-        Assert.Contains("\"enviado\":2", detalheTexto.ToLowerInvariant());
+        Assert.Contains("\"entregue\":2", detalheTexto.ToLowerInvariant());
         Assert.Contains("\"concluida\"", detalheTexto.ToLowerInvariant());
     }
 }

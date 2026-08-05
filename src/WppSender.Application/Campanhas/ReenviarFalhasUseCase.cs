@@ -35,17 +35,14 @@ public class ReenviarFalhasUseCase
             return;
         }
 
-        // Se a campanha já está em andamento, o próprio encadeamento dela vai naturalmente
-        // pegar os envios recém-resetados no próximo passo — agendar aqui criaria uma
-        // segunda cadeia paralela e reduziria pela metade o intervalo anti-ban real.
-        var jaEstavaEmAndamento = campanha.Status == StatusCampanha.EmAndamento;
-
         campanha.ReabrirParaReenvio();
         await _campanhaRepositorio.AtualizarAsync(campanha);
 
-        if (!jaEstavaEmAndamento)
-        {
-            await _jobScheduler.AgendarProximoEnvioAsync(campanhaId, TimeSpan.Zero);
-        }
+        // Sempre agenda um passo: mesmo que a campanha já estivesse EmAndamento, a cadeia de
+        // disparo pode ter ficado dormente (rodou todos os pendentes e parou de reagendar).
+        // Isso é seguro mesmo se a cadeia ainda estiver ativa — o lock distribuído por campanha
+        // em CampanhaSendJob serializa as execuções, então uma chamada "extra" que não encontra
+        // mais nada pendente simplesmente não faz nada, sem duplicar envios nem acelerar o ritmo.
+        await _jobScheduler.AgendarProximoEnvioAsync(campanhaId, TimeSpan.Zero);
     }
 }

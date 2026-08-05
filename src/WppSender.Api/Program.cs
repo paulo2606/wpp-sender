@@ -106,7 +106,18 @@ builder.Services.AddScoped<ISessaoWhatsAppRepository, EfSessaoWhatsAppRepository
 builder.Services.AddScoped<ICampanhaJobScheduler, HangfireCampanhaJobScheduler>();
 builder.Services.AddScoped<CampanhaSendJob>();
 builder.Services.AddScoped<VarredorDeCampanhasAgendadasJob>();
+builder.Services.AddScoped<AtualizarStatusEntregaJob>();
 builder.Services.AddScoped<ProcessarProximoEnvioUseCase>();
+builder.Services.AddScoped(sp =>
+{
+    var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<WhatsAppServiceOptions>>().Value;
+    return new AtualizarStatusEntregaUseCase(
+        sp.GetRequiredService<IEnvioRepository>(),
+        sp.GetRequiredService<ICampanhaRepository>(),
+        sp.GetRequiredService<IWhatsAppClient>(),
+        sp.GetRequiredService<IRelogio>(),
+        options.TimeoutConfirmacaoMinutos);
+});
 builder.Services.AddSingleton<IRelogio, RelogioSistema>();
 builder.Services.Configure<WhatsAppServiceOptions>(builder.Configuration.GetSection("WhatsAppService"));
 builder.Services.AddHttpClient<IWhatsAppClient, HttpWhatsAppClient>((serviceProvider, client) =>
@@ -138,6 +149,7 @@ builder.Services.AddScoped<ObterCampanhaUseCase>();
 builder.Services.AddScoped<IniciarCampanhaUseCase>();
 builder.Services.AddScoped<PausarCampanhaUseCase>();
 builder.Services.AddScoped<RetomarCampanhaUseCase>();
+builder.Services.AddScoped<CancelarCampanhaUseCase>();
 builder.Services.AddScoped<ListarEnviosFalhosUseCase>();
 builder.Services.AddScoped<ReenviarFalhasUseCase>();
 builder.Services.AddScoped<IniciarSessaoWhatsAppUseCase>();
@@ -206,6 +218,10 @@ if (!app.Environment.IsEnvironment("Testing"))
     var recurringJobManager = escopo.ServiceProvider.GetRequiredService<IRecurringJobManager>();
     recurringJobManager.AddOrUpdate<VarredorDeCampanhasAgendadasJob>(
         "varredor-campanhas-agendadas",
+        job => job.ExecutarAsync(),
+        Cron.Minutely);
+    recurringJobManager.AddOrUpdate<AtualizarStatusEntregaJob>(
+        "atualizar-status-entrega",
         job => job.ExecutarAsync(),
         Cron.Minutely);
 }

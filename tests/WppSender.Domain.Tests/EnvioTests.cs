@@ -19,12 +19,59 @@ public class EnvioTests
         var envio = new Envio(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         var agora = new DateTime(2026, 8, 2, 10, 0, 0, DateTimeKind.Utc);
 
-        envio.MarcarComoEnviado(agora);
+        envio.MarcarComoEnviado(agora, "wamid.123");
 
         Assert.Equal(StatusEnvio.Enviado, envio.Status);
+        Assert.Equal("wamid.123", envio.WhatsAppMensagemId);
         Assert.Equal(agora, envio.EnviadoEm);
         Assert.Equal(agora, envio.AtualizadoEm);
         Assert.Null(envio.Erro);
+    }
+
+    [Fact]
+    public void MarcarComoEntregue_DeveAtualizarStatus_QuandoVemDeEnviado()
+    {
+        var envio = new Envio(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var agora = new DateTime(2026, 8, 2, 10, 0, 0, DateTimeKind.Utc);
+        envio.MarcarComoEnviado(agora, "wamid.123");
+
+        envio.MarcarComoEntregue(agora.AddSeconds(5));
+
+        Assert.Equal(StatusEnvio.Entregue, envio.Status);
+    }
+
+    [Fact]
+    public void MarcarComoEntregue_DeveLancar_QuandoNaoVemDeEnviado()
+    {
+        var envio = new Envio(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+
+        Assert.Throws<InvalidOperationException>(() => envio.MarcarComoEntregue(DateTime.UtcNow));
+    }
+
+    [Fact]
+    public void MarcarComoLido_DeveAtualizarStatus_QuandoVemDeEntregue()
+    {
+        var envio = new Envio(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var agora = DateTime.UtcNow;
+        envio.MarcarComoEnviado(agora, "wamid.123");
+        envio.MarcarComoEntregue(agora);
+
+        envio.MarcarComoLido(agora.AddSeconds(5));
+
+        Assert.Equal(StatusEnvio.Lido, envio.Status);
+    }
+
+    [Fact]
+    public void MarcarComoFalhouEntrega_DeveGuardarMotivo_QuandoVemDeEnviado()
+    {
+        var envio = new Envio(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var agora = DateTime.UtcNow;
+        envio.MarcarComoEnviado(agora, "wamid.123");
+
+        envio.MarcarComoFalhouEntrega("Sem confirmação de entrega após timeout", agora.AddMinutes(10));
+
+        Assert.Equal(StatusEnvio.FalhouEntrega, envio.Status);
+        Assert.Equal("Sem confirmação de entrega após timeout", envio.Erro);
     }
 
     [Fact]

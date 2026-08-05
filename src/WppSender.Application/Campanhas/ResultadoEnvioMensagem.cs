@@ -1,3 +1,3 @@
 namespace WppSender.Application.Campanhas;
 
-public record ResultadoEnvioMensagem(bool Sucesso, string? MensagemErro);
+public record ResultadoEnvioMensagem(bool Sucesso, string? MensagemErro, string? MensagemId = null);

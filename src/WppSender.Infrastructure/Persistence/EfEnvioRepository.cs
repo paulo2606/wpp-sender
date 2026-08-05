@@ -65,4 +65,16 @@ public class EfEnvioRepository : IEnvioRepository
 
         return contagens.ToDictionary(c => c.Status, c => c.Quantidade);
     }
+
+    public async Task<IReadOnlyList<Envio>> ListarAguardandoConfirmacaoAsync()
+    {
+        var statusRastreados = new[] { StatusCampanha.EmAndamento, StatusCampanha.Pausada };
+
+        return await (
+            from envio in _db.Envios
+            join campanha in _db.Campanhas on envio.CampanhaId equals campanha.Id
+            where envio.Status == StatusEnvio.Enviado && statusRastreados.Contains(campanha.Status)
+            select envio)
+            .ToListAsync();
+    }
 }

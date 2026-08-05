@@ -27,7 +27,10 @@ public class ObterCampanhaUseCase
         var progresso = new ProgressoCampanha(
             contagens.GetValueOrDefault(StatusEnvio.Pendente),
             contagens.GetValueOrDefault(StatusEnvio.Enviado),
-            contagens.GetValueOrDefault(StatusEnvio.Falhou));
+            contagens.GetValueOrDefault(StatusEnvio.Entregue),
+            contagens.GetValueOrDefault(StatusEnvio.Lido),
+            contagens.GetValueOrDefault(StatusEnvio.Falhou),
+            contagens.GetValueOrDefault(StatusEnvio.FalhouEntrega));
 
         return new CampanhaComProgresso(CampanhaResumo.DeCampanha(campanha), progresso);
     }

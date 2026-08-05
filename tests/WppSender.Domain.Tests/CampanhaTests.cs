@@ -113,6 +113,29 @@ public class CampanhaTests
     }
 
     [Fact]
+    public void Cancelar_DeveMudarParaCancelada_QuandoPausada()
+    {
+        var campanha = CriarCampanhaComStatus(StatusCampanha.Pausada);
+
+        campanha.Cancelar();
+
+        Assert.Equal(StatusCampanha.Cancelada, campanha.Status);
+    }
+
+    [Theory]
+    [InlineData(StatusCampanha.Rascunho)]
+    [InlineData(StatusCampanha.Agendada)]
+    [InlineData(StatusCampanha.EmAndamento)]
+    [InlineData(StatusCampanha.Concluida)]
+    [InlineData(StatusCampanha.Cancelada)]
+    public void Cancelar_DeveLancarExcecao_QuandoNaoPausada(StatusCampanha status)
+    {
+        var campanha = CriarCampanhaComStatus(status);
+
+        Assert.Throws<InvalidOperationException>(() => campanha.Cancelar());
+    }
+
+    [Fact]
     public void ReabrirParaReenvio_DeveVoltarParaEmAndamento_QuandoConcluida()
     {
         var campanha = CriarCampanhaComStatus(StatusCampanha.Concluida);

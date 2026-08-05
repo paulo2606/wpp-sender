@@ -83,7 +83,7 @@ public class ProcessarProximoEnvioUseCase
 
         if (resultadoEnvio.Sucesso)
         {
-            envio.MarcarComoEnviado(_relogio.AgoraUtc());
+            envio.MarcarComoEnviado(_relogio.AgoraUtc(), resultadoEnvio.MensagemId);
         }
         else
         {
@@ -95,8 +95,18 @@ public class ProcessarProximoEnvioUseCase
         var aindaTemPendente = await _envioRepositorio.BuscarProximoPendenteAsync(campanhaId);
         if (aindaTemPendente is null)
         {
-            campanha.Concluir();
-            await _campanhaRepositorio.AtualizarAsync(campanha);
+            // Se sobrou algum envio "Enviado" (despachado, aguardando confirmação de entrega),
+            // não conclui aqui — quem decide é o AtualizarStatusEntregaUseCase, quando o ACK
+            // chegar. Mas se todo envio já está num estado final (ex.: só Falhou, nenhum chegou
+            // a sair de verdade), não há mais nada a esperar: conclui já, senão a campanha fica
+            // travada em EmAndamento pra sempre, sem ninguém mais reavaliando o status dela.
+            var contagens = await _envioRepositorio.ContarPorStatusAsync(campanhaId);
+            if (contagens.GetValueOrDefault(StatusEnvio.Enviado) == 0)
+            {
+                campanha.Concluir();
+                await _campanhaRepositorio.AtualizarAsync(campanha);
+            }
+
             return;
         }
 

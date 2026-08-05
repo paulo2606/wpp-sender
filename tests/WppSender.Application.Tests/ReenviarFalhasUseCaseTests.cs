@@ -39,11 +39,13 @@ public class ReenviarFalhasUseCaseTests
     }
 
     [Fact]
-    public async Task NaoDeveReagendar_QuandoCampanhaJaEstaEmAndamento()
+    public async Task DeveReagendar_QuandoCampanhaJaEstaEmAndamento()
     {
-        // Uma campanha em andamento já tem seu próprio encadeamento vivo, que vai pegar
-        // o envio recém-resetado no próximo passo dele mesmo. Agendar aqui criaria uma
-        // segunda cadeia paralela, reduzindo o intervalo anti-ban efetivo entre mensagens.
+        // Campanha EmAndamento não garante que a cadeia de disparo ainda esteja viva: ela
+        // pode ter esgotado os pendentes e parado de reagendar sozinha (aguardando só
+        // confirmação de entrega). Por isso sempre reagenda aqui — é seguro mesmo se a
+        // cadeia original ainda estiver ativa, pois o lock distribuído por campanha em
+        // CampanhaSendJob serializa as execuções concorrentes.
         var leadRepositorio = new FakeLeadRepository();
         var campanhaRepositorio = new FakeCampanhaRepository();
         var envioRepositorio = new FakeEnvioRepository();
@@ -66,7 +68,7 @@ public class ReenviarFalhasUseCaseTests
         Assert.Equal(1, contagens[StatusEnvio.Pendente]);
         var recarregada = await campanhaRepositorio.BuscarPorIdAsync(campanha.Id);
         Assert.Equal(StatusCampanha.EmAndamento, recarregada!.Status);
-        Assert.Empty(scheduler.Agendamentos);
+        Assert.Single(scheduler.Agendamentos);
     }
 
     [Fact]

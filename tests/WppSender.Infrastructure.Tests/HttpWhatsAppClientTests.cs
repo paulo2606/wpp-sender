@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
+using WppSender.Application.Campanhas;
 using WppSender.Domain;
 using WppSender.Infrastructure.WhatsApp;
 
@@ -45,7 +46,10 @@ public class HttpWhatsAppClientTests
     [Fact]
     public async Task EnviarMensagemAsync_DeveIncluirHeaderDeApiKey()
     {
-        var fakeHandler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var fakeHandler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(new { mensagemId = "wamid.1" }), Encoding.UTF8, "application/json"),
+        });
         var cliente = CriarCliente(fakeHandler, "minha-chave-secreta");
 
         await cliente.EnviarMensagemAsync("5511912345678", "Ola");
@@ -55,14 +59,18 @@ public class HttpWhatsAppClientTests
     }
 
     [Fact]
-    public async Task EnviarMensagemAsync_DeveRetornarSucesso_QuandoRespostaEh2xx()
+    public async Task EnviarMensagemAsync_DeveRetornarSucessoComMensagemId_QuandoRespostaEh2xx()
     {
-        var fakeHandler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var fakeHandler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(new { mensagemId = "wamid.1" }), Encoding.UTF8, "application/json"),
+        });
         var cliente = CriarCliente(fakeHandler);
 
         var resultado = await cliente.EnviarMensagemAsync("5511912345678", "Ola");
 
         Assert.True(resultado.Sucesso);
+        Assert.Equal("wamid.1", resultado.MensagemId);
     }
 
     [Fact]
@@ -180,5 +188,44 @@ public class HttpWhatsAppClientTests
         var status = await cliente.ObterStatusSessaoAsync();
 
         Assert.Equal(StatusSessaoWhatsApp.Desconectado, status);
+    }
+
+    [Fact]
+    public async Task ObterStatusMensagensAsync_DeveMapearStatusRetornados()
+    {
+        var fakeHandler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                JsonSerializer.Serialize(new Dictionary<string, string> { ["wamid.1"] = "entregue", ["wamid.2"] = "lido", ["wamid.3"] = "erro" }),
+                Encoding.UTF8,
+                "application/json"),
+        });
+        var cliente = CriarCliente(fakeHandler);
+
+        var resultado = await cliente.ObterStatusMensagensAsync(new[] { "wamid.1", "wamid.2", "wamid.3" });
+
+        Assert.Equal(StatusEntregaMensagem.Entregue, resultado["wamid.1"]);
+        Assert.Equal(StatusEntregaMensagem.Lido, resultado["wamid.2"]);
+        Assert.Equal(StatusEntregaMensagem.Erro, resultado["wamid.3"]);
+    }
+
+    [Fact]
+    public async Task ObterStatusMensagensAsync_DeveRetornarVazio_QuandoNenhumIdInformado()
+    {
+        var cliente = CriarCliente(new ThrowingHttpMessageHandler());
+
+        var resultado = await cliente.ObterStatusMensagensAsync(Array.Empty<string>());
+
+        Assert.Empty(resultado);
+    }
+
+    [Fact]
+    public async Task ObterStatusMensagensAsync_DeveRetornarVazio_QuandoConexaoFalha()
+    {
+        var cliente = CriarCliente(new ThrowingHttpMessageHandler());
+
+        var resultado = await cliente.ObterStatusMensagensAsync(new[] { "wamid.1" });
+
+        Assert.Empty(resultado);
     }
 }

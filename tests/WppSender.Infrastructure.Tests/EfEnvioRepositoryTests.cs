@@ -39,7 +39,7 @@ public class EfEnvioRepositoryTests : IAsyncLifetime
         await campanhaRepositorio.AdicionarAsync(campanha);
         var pendente = new Envio(Guid.NewGuid(), campanha.Id, Guid.NewGuid());
         var enviado = new Envio(Guid.NewGuid(), campanha.Id, Guid.NewGuid());
-        enviado.MarcarComoEnviado(DateTime.UtcNow);
+        enviado.MarcarComoEnviado(DateTime.UtcNow, "wamid.1");
         await envioRepositorio.AdicionarVariosAsync(new[] { pendente, enviado });
 
         var resultado = await envioRepositorio.BuscarProximoPendenteAsync(campanha.Id);
@@ -56,7 +56,7 @@ public class EfEnvioRepositoryTests : IAsyncLifetime
         var campanha = new Campanha(Guid.NewGuid(), "Campanha", "Msg", Guid.NewGuid(), null);
         await campanhaRepositorio.AdicionarAsync(campanha);
         var enviado = new Envio(Guid.NewGuid(), campanha.Id, Guid.NewGuid());
-        enviado.MarcarComoEnviado(DateTime.UtcNow);
+        enviado.MarcarComoEnviado(DateTime.UtcNow, "wamid.1");
         var falhou = new Envio(Guid.NewGuid(), campanha.Id, Guid.NewGuid());
         falhou.MarcarComoFalhou("erro");
         var pendente = new Envio(Guid.NewGuid(), campanha.Id, Guid.NewGuid());
@@ -67,5 +67,33 @@ public class EfEnvioRepositoryTests : IAsyncLifetime
         Assert.Equal(1, contagens[StatusEnvio.Enviado]);
         Assert.Equal(1, contagens[StatusEnvio.Falhou]);
         Assert.Equal(1, contagens[StatusEnvio.Pendente]);
+    }
+
+    [Fact]
+    public async Task ListarAguardandoConfirmacaoAsync_DeveIgnorarEnviosDeCampanhaCancelada()
+    {
+        var campanhaRepositorio = new EfCampanhaRepository(_dbContext);
+        var envioRepositorio = new EfEnvioRepository(_dbContext);
+
+        var campanhaEmAndamento = new Campanha(Guid.NewGuid(), "Em andamento", "Msg", Guid.NewGuid(), null);
+        campanhaEmAndamento.Iniciar();
+        await campanhaRepositorio.AdicionarAsync(campanhaEmAndamento);
+        var envioRastreado = new Envio(Guid.NewGuid(), campanhaEmAndamento.Id, Guid.NewGuid());
+        envioRastreado.MarcarComoEnviado(DateTime.UtcNow, "wamid.rastreado");
+
+        var campanhaCancelada = new Campanha(Guid.NewGuid(), "Cancelada", "Msg", Guid.NewGuid(), null);
+        campanhaCancelada.Iniciar();
+        campanhaCancelada.Pausar();
+        campanhaCancelada.Cancelar();
+        await campanhaRepositorio.AdicionarAsync(campanhaCancelada);
+        var envioCongelado = new Envio(Guid.NewGuid(), campanhaCancelada.Id, Guid.NewGuid());
+        envioCongelado.MarcarComoEnviado(DateTime.UtcNow, "wamid.congelado");
+
+        await envioRepositorio.AdicionarVariosAsync(new[] { envioRastreado, envioCongelado });
+
+        var aguardando = await envioRepositorio.ListarAguardandoConfirmacaoAsync();
+
+        Assert.Contains(aguardando, e => e.Id == envioRastreado.Id);
+        Assert.DoesNotContain(aguardando, e => e.Id == envioCongelado.Id);
     }
 }

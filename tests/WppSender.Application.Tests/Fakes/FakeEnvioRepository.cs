@@ -58,4 +58,19 @@ public class FakeEnvioRepository : IEnvioRepository
 
     // Exposto pros testes do motor de envio (Task 6) inspecionarem o estado bruto.
     public IReadOnlyList<Envio> Todos => _envios;
+
+    // Testes que precisam simular uma campanha Cancelada (pra provar que o polling de ACK
+    // ignora envios dela) registram o status aqui; campanhas ausentes são tratadas como
+    // rastreáveis por padrão, já que a maioria dos testes não se importa com isso.
+    public Dictionary<Guid, StatusCampanha> StatusCampanhas { get; } = new();
+
+    public Task<IReadOnlyList<Envio>> ListarAguardandoConfirmacaoAsync()
+    {
+        var resultado = _envios
+            .Where(e => e.Status == StatusEnvio.Enviado)
+            .Where(e => !StatusCampanhas.TryGetValue(e.CampanhaId, out var status) || status is StatusCampanha.EmAndamento or StatusCampanha.Pausada)
+            .ToList();
+
+        return Task.FromResult<IReadOnlyList<Envio>>(resultado);
+    }
 }

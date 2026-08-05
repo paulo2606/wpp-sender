@@ -71,7 +71,7 @@ public class WppSenderDbContext : DbContext
         {
             entity.ToTable("campanhas", t => t.HasCheckConstraint(
                 "ck_campanhas_status",
-                "status IN ('rascunho','agendada','em_andamento','pausada','concluida')"));
+                "status IN ('rascunho','agendada','em_andamento','pausada','concluida','cancelada')"));
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Nome).IsRequired();
             entity.Property(c => c.Mensagem).IsRequired();
@@ -90,10 +90,11 @@ public class WppSenderDbContext : DbContext
         {
             entity.ToTable("campanha_envios", t => t.HasCheckConstraint(
                 "ck_campanha_envios_status",
-                "status IN ('pendente','enviado','falhou')"));
+                "status IN ('pendente','enviado','entregue','lido','falhou','falhou_entrega')"));
             entity.HasKey(e => e.Id);
             entity.Property(e => e.CampanhaId).HasColumnName("campanha_id").IsRequired();
             entity.Property(e => e.LeadId).HasColumnName("lead_id").IsRequired();
+            entity.Property(e => e.WhatsAppMensagemId).HasColumnName("whatsapp_mensagem_id");
             entity.Property(e => e.EnviadoEm).HasColumnName("enviado_em");
             entity.Property(e => e.AtualizadoEm).HasColumnName("atualizado_em");
             entity.Property(e => e.Erro).HasColumnName("erro");
@@ -150,6 +151,7 @@ public class WppSenderDbContext : DbContext
         StatusCampanha.EmAndamento => "em_andamento",
         StatusCampanha.Pausada => "pausada",
         StatusCampanha.Concluida => "concluida",
+        StatusCampanha.Cancelada => "cancelada",
         _ => throw new ArgumentOutOfRangeException(nameof(status)),
     };
 
@@ -160,6 +162,7 @@ public class WppSenderDbContext : DbContext
         "em_andamento" => StatusCampanha.EmAndamento,
         "pausada" => StatusCampanha.Pausada,
         "concluida" => StatusCampanha.Concluida,
+        "cancelada" => StatusCampanha.Cancelada,
         _ => throw new ArgumentOutOfRangeException(nameof(valor)),
     };
 
@@ -167,7 +170,10 @@ public class WppSenderDbContext : DbContext
     {
         StatusEnvio.Pendente => "pendente",
         StatusEnvio.Enviado => "enviado",
+        StatusEnvio.Entregue => "entregue",
+        StatusEnvio.Lido => "lido",
         StatusEnvio.Falhou => "falhou",
+        StatusEnvio.FalhouEntrega => "falhou_entrega",
         _ => throw new ArgumentOutOfRangeException(nameof(status)),
     };
 
@@ -175,7 +181,10 @@ public class WppSenderDbContext : DbContext
     {
         "pendente" => StatusEnvio.Pendente,
         "enviado" => StatusEnvio.Enviado,
+        "entregue" => StatusEnvio.Entregue,
+        "lido" => StatusEnvio.Lido,
         "falhou" => StatusEnvio.Falhou,
+        "falhou_entrega" => StatusEnvio.FalhouEntrega,
         _ => throw new ArgumentOutOfRangeException(nameof(valor)),
     };
 
