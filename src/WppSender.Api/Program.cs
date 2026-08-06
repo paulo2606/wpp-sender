@@ -217,6 +217,12 @@ builder.Services.AddHsts(options =>
 
 var app = builder.Build();
 
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    using var escopoMigracao = app.Services.CreateScope();
+    escopoMigracao.ServiceProvider.GetRequiredService<WppSenderDbContext>().Database.Migrate();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
