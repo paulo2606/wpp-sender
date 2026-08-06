@@ -2,7 +2,14 @@ using WppSender.Domain;
 
 namespace WppSender.Application.Dashboard;
 
-public record ContagemCampanhasPorStatus(int Rascunho, int Agendada, int EmAndamento, int Pausada, int Concluida);
+public record ContagemCampanhasPorStatus(
+    int Rascunho,
+    int Agendada,
+    int EmAndamento,
+    int Pausada,
+    int Concluida,
+    int ConcluidaComFalhas,
+    int Cancelada);
 
 public class ContarCampanhasPorStatusUseCase
 {
@@ -22,6 +29,8 @@ public class ContarCampanhasPorStatusUseCase
             contagens.GetValueOrDefault(StatusCampanha.Agendada),
             contagens.GetValueOrDefault(StatusCampanha.EmAndamento),
             contagens.GetValueOrDefault(StatusCampanha.Pausada),
-            contagens.GetValueOrDefault(StatusCampanha.Concluida));
+            contagens.GetValueOrDefault(StatusCampanha.Concluida),
+            contagens.GetValueOrDefault(StatusCampanha.ConcluidaComFalhas),
+            contagens.GetValueOrDefault(StatusCampanha.Cancelada));
     }
 }

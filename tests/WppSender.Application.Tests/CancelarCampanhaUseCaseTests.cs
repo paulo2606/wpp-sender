@@ -21,7 +21,7 @@ public class CancelarCampanhaUseCaseTests
 
         var criada = await new CriarCampanhaUseCase(campanhaRepositorio, envioRepositorio, leadRepositorio, new FakeUnitOfWork())
             .ExecutarAsync("Campanha", "Msg", grupoId, null);
-        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.CampanhaId!.Value);
+        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.Valor);
         campanha!.Iniciar();
         campanha.Pausar();
         await campanhaRepositorio.AtualizarAsync(campanha);
@@ -81,7 +81,7 @@ public class CancelarCampanhaUseCaseTests
         await new CriarLeadUseCase(leadRepositorio).ExecutarAsync("Lead1", "11911111111", null, null, null, grupoId);
         var criada = await new CriarCampanhaUseCase(campanhaRepositorio, envioRepositorio, leadRepositorio, new FakeUnitOfWork())
             .ExecutarAsync("Campanha", "Msg", grupoId, null);
-        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.CampanhaId!.Value);
+        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.Valor);
         campanha!.Iniciar();
         await campanhaRepositorio.AtualizarAsync(campanha);
         var useCase = new CancelarCampanhaUseCase(campanhaRepositorio, envioRepositorio);

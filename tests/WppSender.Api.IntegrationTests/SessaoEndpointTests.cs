@@ -22,8 +22,7 @@ public class SessaoEndpointTests : IAsyncLifetime
         var registro = await _client.PostAsJsonAsync("/api/auth/registrar", new { email = "admin@teste.com", senha = "senhaAdmin123" });
         registro.EnsureSuccessStatusCode();
         var login = await _client.PostAsJsonAsync("/api/auth/login", new { email = "admin@teste.com", senha = "senhaAdmin123" });
-        var corpo = await login.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", corpo!["token"]);
+        login.EnsureSuccessStatusCode();
     }
 
     public async Task DisposeAsync()
@@ -54,11 +53,7 @@ public class SessaoEndpointTests : IAsyncLifetime
     [Fact]
     public async Task FluxoCompleto_DeveEnviarParaTodosOsLeadsEConcluirCampanha_QuandoSessaoConectada()
     {
-        // Teste ponta a ponta do motor inteiro: cria grupo com 2 leads, cria campanha,
-        // simula a sessão conectada diretamente via DI (sem QR real), inicia a campanha
-        // via API, e então invoca ProcessarProximoEnvioUseCase diretamente em loop pra
-        // simular os passos que o Hangfire executaria — determinístico, sem esperar
-        // o intervalo aleatório real (RNF30: sem dependência de tempo real em testes).
+
         var lead1 = await _client.PostAsJsonAsync("/api/leads", new { nome = "Lead1", telefone = "11911111111", instagram = (string?)null, endereco = (object?)null, origem = (string?)null, grupoId = (Guid?)null });
         var lead1Corpo = await lead1.Content.ReadFromJsonAsync<Dictionary<string, Guid>>();
         var lead2 = await _client.PostAsJsonAsync("/api/leads", new { nome = "Lead2", telefone = "11922222222", instagram = (string?)null, endereco = (object?)null, origem = (string?)null, grupoId = (Guid?)null });
@@ -88,8 +83,7 @@ public class SessaoEndpointTests : IAsyncLifetime
 
         using (var escopo = _factory.Services.CreateScope())
         {
-            // Quem conclui a campanha agora é o job de confirmação de entrega, não mais
-            // o motor de disparo — simula um ciclo do AtualizarStatusEntregaJob.
+
             var atualizarStatusUseCase = escopo.ServiceProvider.GetRequiredService<AtualizarStatusEntregaUseCase>();
             await atualizarStatusUseCase.ExecutarAsync();
         }

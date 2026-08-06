@@ -14,10 +14,10 @@ public class EditarLeadUseCaseTests
         var editarUseCase = new EditarLeadUseCase(repositorio);
         var criado = await criarUseCase.ExecutarAsync("Fulano", "11911111111", null, null, null);
 
-        var resultado = await editarUseCase.ExecutarAsync(criado.LeadId!.Value, "Fulano Editado", "11922222222", "insta_novo", null, "origem_nova");
+        var resultado = await editarUseCase.ExecutarAsync(criado.Valor, "Fulano Editado", "11922222222", "insta_novo", null, "origem_nova");
 
         Assert.True(resultado.Sucesso);
-        var atualizado = await repositorio.BuscarPorIdAsync(criado.LeadId.Value);
+        var atualizado = await repositorio.BuscarPorIdAsync(criado.Valor);
         Assert.Equal("Fulano Editado", atualizado!.Nome);
         Assert.Equal("11922222222", atualizado.TelefoneNormalizado);
     }
@@ -47,7 +47,7 @@ public class EditarLeadUseCaseTests
         var editarUseCase = new EditarLeadUseCase(repositorio);
         var criado = await criarUseCase.ExecutarAsync("Fulano", "11911111111", null, null, null);
 
-        var resultado = await editarUseCase.ExecutarAsync(criado.LeadId!.Value, nome!, telefone!, null, null, null);
+        var resultado = await editarUseCase.ExecutarAsync(criado.Valor, nome!, telefone!, null, null, null);
 
         Assert.False(resultado.Sucesso);
         Assert.NotNull(resultado.MensagemErro);
@@ -63,7 +63,7 @@ public class EditarLeadUseCaseTests
         var lead1 = await criarUseCase.ExecutarAsync("Lead1", "11911111111", null, null, null);
         var lead2 = await criarUseCase.ExecutarAsync("Lead2", "11922222222", null, null, null);
 
-        var resultado = await editarUseCase.ExecutarAsync(lead2.LeadId!.Value, "Lead2", "11911111111", null, null, null);
+        var resultado = await editarUseCase.ExecutarAsync(lead2.Valor, "Lead2", "11911111111", null, null, null);
 
         Assert.False(resultado.Sucesso);
         Assert.Equal("Telefone já cadastrado", resultado.MensagemErro);
@@ -78,7 +78,7 @@ public class EditarLeadUseCaseTests
         var editarUseCase = new EditarLeadUseCase(repositorio);
         var criado = await criarUseCase.ExecutarAsync("Fulano", "11911111111", null, null, null);
 
-        var resultado = await editarUseCase.ExecutarAsync(criado.LeadId!.Value, "Fulano Editado", "11911111111", null, null, null);
+        var resultado = await editarUseCase.ExecutarAsync(criado.Valor, "Fulano Editado", "11911111111", null, null, null);
 
         Assert.True(resultado.Sucesso);
     }
@@ -91,14 +91,14 @@ public class EditarLeadUseCaseTests
         var editarUseCase = new EditarLeadUseCase(repositorio);
         var enderecoOriginal = new EnderecoInput("Rua A", "100", null, "Centro", "São Paulo", "SP", "01000-000");
         var criado = await criarUseCase.ExecutarAsync("Fulano", "11911111111", null, enderecoOriginal, null);
-        var leadCriado = await repositorio.BuscarPorIdAsync(criado.LeadId!.Value);
+        var leadCriado = await repositorio.BuscarPorIdAsync(criado.Valor);
         var enderecoIdOriginal = leadCriado!.Endereco!.Id;
 
         var enderecoNovo = new EnderecoInput("Rua B", "200", "Apto 3", "Jardins", "Rio de Janeiro", "RJ", "20000-000");
-        var resultado = await editarUseCase.ExecutarAsync(criado.LeadId.Value, "Fulano", "11911111111", null, enderecoNovo, null);
+        var resultado = await editarUseCase.ExecutarAsync(criado.Valor, "Fulano", "11911111111", null, enderecoNovo, null);
 
         Assert.True(resultado.Sucesso);
-        var atualizado = await repositorio.BuscarPorIdAsync(criado.LeadId.Value);
+        var atualizado = await repositorio.BuscarPorIdAsync(criado.Valor);
         Assert.NotNull(atualizado!.Endereco);
         Assert.Equal(enderecoIdOriginal, atualizado.Endereco!.Id);
         Assert.Equal("Rua B", atualizado.Endereco.Rua);
@@ -115,10 +115,10 @@ public class EditarLeadUseCaseTests
         var criado = await criarUseCase.ExecutarAsync("Fulano", "11911111111", null, null, null);
 
         var enderecoNovo = new EnderecoInput("Rua B", "200", null, "Jardins", "Rio de Janeiro", "RJ", "20000-000");
-        var resultado = await editarUseCase.ExecutarAsync(criado.LeadId!.Value, "Fulano", "11911111111", null, enderecoNovo, null);
+        var resultado = await editarUseCase.ExecutarAsync(criado.Valor, "Fulano", "11911111111", null, enderecoNovo, null);
 
         Assert.True(resultado.Sucesso);
-        var atualizado = await repositorio.BuscarPorIdAsync(criado.LeadId.Value);
+        var atualizado = await repositorio.BuscarPorIdAsync(criado.Valor);
         Assert.NotNull(atualizado!.Endereco);
         Assert.Equal("Rua B", atualizado.Endereco!.Rua);
     }
@@ -132,10 +132,10 @@ public class EditarLeadUseCaseTests
         var enderecoOriginal = new EnderecoInput("Rua A", "100", null, "Centro", "São Paulo", "SP", "01000-000");
         var criado = await criarUseCase.ExecutarAsync("Fulano", "11911111111", null, enderecoOriginal, null);
 
-        var resultado = await editarUseCase.ExecutarAsync(criado.LeadId!.Value, "Fulano", "11911111111", null, null, null);
+        var resultado = await editarUseCase.ExecutarAsync(criado.Valor, "Fulano", "11911111111", null, null, null);
 
         Assert.True(resultado.Sucesso);
-        var atualizado = await repositorio.BuscarPorIdAsync(criado.LeadId.Value);
+        var atualizado = await repositorio.BuscarPorIdAsync(criado.Valor);
         Assert.Null(atualizado!.Endereco);
     }
 
@@ -148,10 +148,10 @@ public class EditarLeadUseCaseTests
         var criado = await criarUseCase.ExecutarAsync("Fulano", "11911111111", null, null, null);
         var grupoId = Guid.NewGuid();
 
-        var resultado = await editarUseCase.ExecutarAsync(criado.LeadId!.Value, "Fulano", "11911111111", null, null, null, grupoId);
+        var resultado = await editarUseCase.ExecutarAsync(criado.Valor, "Fulano", "11911111111", null, null, null, grupoId);
 
         Assert.True(resultado.Sucesso);
-        var atualizado = await repositorio.BuscarPorIdAsync(criado.LeadId.Value);
+        var atualizado = await repositorio.BuscarPorIdAsync(criado.Valor);
         Assert.Equal(grupoId, atualizado!.GrupoId);
     }
 }

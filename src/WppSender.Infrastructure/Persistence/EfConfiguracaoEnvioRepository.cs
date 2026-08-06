@@ -16,9 +16,6 @@ public class EfConfiguracaoEnvioRepository : IConfiguracaoEnvioRepository
     {
         await using var transacao = await _db.Database.BeginTransactionAsync();
 
-        // SELECT ... FOR UPDATE trava a linha singleton até o fim da transação,
-        // serializando o incremento do contador entre execuções concorrentes
-        // de campanhas diferentes (RNF28).
         var config = await _db.ConfiguracoesEnvio
             .FromSqlRaw("SELECT * FROM configuracao_envio WHERE id = 1 FOR UPDATE")
             .FirstAsync();
@@ -29,5 +26,10 @@ public class EfConfiguracaoEnvioRepository : IConfiguracaoEnvioRepository
         await transacao.CommitAsync();
 
         return conseguiu;
+    }
+
+    public async Task<ConfiguracaoEnvio> ObterAsync()
+    {
+        return await _db.ConfiguracoesEnvio.AsNoTracking().FirstAsync();
     }
 }

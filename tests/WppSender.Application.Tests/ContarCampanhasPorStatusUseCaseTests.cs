@@ -29,6 +29,8 @@ public class ContarCampanhasPorStatusUseCaseTests
         Assert.Equal(0, resultado.EmAndamento);
         Assert.Equal(0, resultado.Pausada);
         Assert.Equal(0, resultado.Concluida);
+        Assert.Equal(0, resultado.ConcluidaComFalhas);
+        Assert.Equal(0, resultado.Cancelada);
     }
 
     [Fact]

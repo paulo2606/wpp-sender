@@ -1,4 +1,5 @@
 using WppSender.Domain;
+using WppSender.Application.Shared;
 
 namespace WppSender.Application.Grupos;
 
@@ -13,16 +14,16 @@ public class ExcluirGrupoUseCase
         _repositorio = repositorio;
     }
 
-    public async Task<ExcluirGrupoResult> ExecutarAsync(Guid id)
+    public async Task<Resultado> ExecutarAsync(Guid id)
     {
         var grupo = await _repositorio.BuscarPorIdAsync(id);
         if (grupo is null)
         {
-            return ExcluirGrupoResult.Falha(MensagemGrupoNaoEncontrado);
+            return Resultado.Falha(MensagemGrupoNaoEncontrado);
         }
 
         await _repositorio.RemoverAsync(grupo);
 
-        return ExcluirGrupoResult.ComSucesso();
+        return Resultado.ComSucesso();
     }
 }

@@ -103,13 +103,23 @@ public class CampanhaTests
     }
 
     [Fact]
-    public void Concluir_DeveMudarParaConcluida_QuandoEmAndamento()
+    public void Concluir_DeveMudarParaConcluida_QuandoEmAndamentoSemFalhas()
     {
         var campanha = CriarCampanhaComStatus(StatusCampanha.EmAndamento);
 
-        campanha.Concluir();
+        campanha.Concluir(comFalhas: false);
 
         Assert.Equal(StatusCampanha.Concluida, campanha.Status);
+    }
+
+    [Fact]
+    public void Concluir_DeveMudarParaConcluidaComFalhas_QuandoHouveFalha()
+    {
+        var campanha = CriarCampanhaComStatus(StatusCampanha.EmAndamento);
+
+        campanha.Concluir(comFalhas: true);
+
+        Assert.Equal(StatusCampanha.ConcluidaComFalhas, campanha.Status);
     }
 
     [Fact]
@@ -127,6 +137,7 @@ public class CampanhaTests
     [InlineData(StatusCampanha.Agendada)]
     [InlineData(StatusCampanha.EmAndamento)]
     [InlineData(StatusCampanha.Concluida)]
+    [InlineData(StatusCampanha.ConcluidaComFalhas)]
     [InlineData(StatusCampanha.Cancelada)]
     public void Cancelar_DeveLancarExcecao_QuandoNaoPausada(StatusCampanha status)
     {
@@ -139,6 +150,16 @@ public class CampanhaTests
     public void ReabrirParaReenvio_DeveVoltarParaEmAndamento_QuandoConcluida()
     {
         var campanha = CriarCampanhaComStatus(StatusCampanha.Concluida);
+
+        campanha.ReabrirParaReenvio();
+
+        Assert.Equal(StatusCampanha.EmAndamento, campanha.Status);
+    }
+
+    [Fact]
+    public void ReabrirParaReenvio_DeveVoltarParaEmAndamento_QuandoConcluidaComFalhas()
+    {
+        var campanha = CriarCampanhaComStatus(StatusCampanha.ConcluidaComFalhas);
 
         campanha.ReabrirParaReenvio();
 
@@ -184,7 +205,11 @@ public class CampanhaTests
                 break;
             case StatusCampanha.Concluida:
                 campanha.Iniciar();
-                campanha.Concluir();
+                campanha.Concluir(comFalhas: false);
+                break;
+            case StatusCampanha.ConcluidaComFalhas:
+                campanha.Iniciar();
+                campanha.Concluir(comFalhas: true);
                 break;
         }
 

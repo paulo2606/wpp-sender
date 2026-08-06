@@ -5,11 +5,6 @@ using Xunit;
 
 namespace WppSender.Infrastructure.Tests;
 
-// Este job vive em WppSender.Infrastructure, mas carrega regra de negócio real (varredura
-// de campanhas vencidas e o auto-pause quando a sessão cai) — diferente de suas classes
-// irmãs, que só repassam chamadas. O projeto de testes de Infraestrutura não referencia o
-// projeto de testes de Aplicação (onde vivem os Fakes reais), então usamos aqui dublês
-// mínimos e locais, implementando as mesmas interfaces de domínio/aplicação.
 public class VarredorDeCampanhasAgendadasJobTests
 {
     private class FakeCampanhaRepository : ICampanhaRepository

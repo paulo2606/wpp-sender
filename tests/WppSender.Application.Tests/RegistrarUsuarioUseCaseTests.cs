@@ -49,6 +49,6 @@ public class RegistrarUsuarioUseCaseTests
         var resultado = await autenticarUseCase.ExecutarAsync("admin@teste.com", "senha123");
 
         Assert.True(resultado.Sucesso);
-        Assert.NotNull(resultado.Token);
+        Assert.NotNull(resultado.Valor);
     }
 }

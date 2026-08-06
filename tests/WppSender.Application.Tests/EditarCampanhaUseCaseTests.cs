@@ -18,7 +18,7 @@ public class EditarCampanhaUseCaseTests
         var criarCampanhaUseCase = new CriarCampanhaUseCase(campanhaRepositorio, envioRepositorio, leadRepositorio, new FakeUnitOfWork());
         var criada = await criarCampanhaUseCase.ExecutarAsync("Nome Antigo", "Msg Antiga", grupoId, agendadoPara: null);
 
-        return (campanhaRepositorio, envioRepositorio, leadRepositorio, criada.CampanhaId!.Value);
+        return (campanhaRepositorio, envioRepositorio, leadRepositorio, criada.Valor);
     }
 
     [Fact]

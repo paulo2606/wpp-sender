@@ -1,4 +1,5 @@
 using WppSender.Domain;
+using WppSender.Application.Shared;
 
 namespace WppSender.Application.Leads;
 
@@ -13,7 +14,7 @@ public class CriarLeadUseCase
         _repositorio = repositorio;
     }
 
-    public async Task<CriarLeadResult> ExecutarAsync(string nome, string telefone, string? instagram, EnderecoInput? endereco, string? origem, Guid? grupoId = null)
+    public async Task<ResultadoComValor<Guid>> ExecutarAsync(string nome, string telefone, string? instagram, EnderecoInput? endereco, string? origem, Guid? grupoId = null)
     {
         Lead lead;
         try
@@ -26,16 +27,16 @@ public class CriarLeadUseCase
         }
         catch (ArgumentException ex)
         {
-            return CriarLeadResult.Falha(ex.Message);
+            return ResultadoComValor<Guid>.Falha(ex.Message);
         }
 
         var existente = await _repositorio.BuscarPorTelefoneNormalizadoAsync(lead.TelefoneNormalizado);
         if (existente is not null)
         {
-            return CriarLeadResult.Falha(MensagemTelefoneDuplicado);
+            return ResultadoComValor<Guid>.Falha(MensagemTelefoneDuplicado);
         }
 
         await _repositorio.AdicionarAsync(lead);
-        return CriarLeadResult.ComSucesso(lead.Id);
+        return ResultadoComValor<Guid>.ComSucesso(lead.Id);
     }
 }

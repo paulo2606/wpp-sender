@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net;
 using System.Net.Http.Json;
 using System.Net.Http.Headers;
@@ -19,8 +20,7 @@ public class GruposEndpointTests : IAsyncLifetime
         var registro = await _client.PostAsJsonAsync("/api/auth/registrar", new { email = "admin@teste.com", senha = "senhaAdmin123" });
         registro.EnsureSuccessStatusCode();
         var login = await _client.PostAsJsonAsync("/api/auth/login", new { email = "admin@teste.com", senha = "senhaAdmin123" });
-        var corpo = await login.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", corpo!["token"]);
+        login.EnsureSuccessStatusCode();
     }
 
     public async Task DisposeAsync()
@@ -101,6 +101,23 @@ public class GruposEndpointTests : IAsyncLifetime
 
         var listagem = await _client.GetFromJsonAsync<ListaGruposResponseTeste>("/api/grupos");
         Assert.Equal("Nome Novo", listagem!.Itens[0].Nome);
+    }
+
+    [Fact]
+    public async Task DeveAdicionarLeadAoGrupo_QuandoEditarComLeadIds()
+    {
+        var lead1 = await CriarLeadAsync("Lead1", "11955556666");
+        var lead2 = await CriarLeadAsync("Lead2", "11955557777");
+        var criacao = await _client.PostAsJsonAsync("/api/grupos", new { nome = "Grupo", descricao = (string?)null, leadIds = new[] { lead1 } });
+        var grupoCriado = await criacao.Content.ReadFromJsonAsync<Dictionary<string, Guid>>();
+
+        var edicao = await _client.PutAsJsonAsync($"/api/grupos/{grupoCriado!["id"]}", new { nome = "Grupo", descricao = (string?)null, leadIds = new[] { lead2 } });
+        Assert.Equal(HttpStatusCode.OK, edicao.StatusCode);
+
+        var leadObtido = await _client.GetFromJsonAsync<LeadResponseTeste>($"/api/leads/{lead2}");
+        Assert.Equal(grupoCriado["id"], leadObtido!.GrupoId);
+        var listagem = await _client.GetFromJsonAsync<ListaGruposResponseTeste>("/api/grupos");
+        Assert.Equal(2, listagem!.Itens.Single(g => g.Id == grupoCriado["id"]).QuantidadeLeads);
     }
 
     [Fact]

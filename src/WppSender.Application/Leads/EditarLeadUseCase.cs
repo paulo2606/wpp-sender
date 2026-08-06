@@ -1,4 +1,5 @@
 using WppSender.Domain;
+using WppSender.Application.Shared;
 
 namespace WppSender.Application.Leads;
 
@@ -14,12 +15,12 @@ public class EditarLeadUseCase
         _repositorio = repositorio;
     }
 
-    public async Task<EditarLeadResult> ExecutarAsync(Guid id, string nome, string telefone, string? instagram, EnderecoInput? endereco, string? origem, Guid? grupoId = null)
+    public async Task<Resultado<EditarLeadErro>> ExecutarAsync(Guid id, string nome, string telefone, string? instagram, EnderecoInput? endereco, string? origem, Guid? grupoId = null)
     {
         var lead = await _repositorio.BuscarPorIdAsync(id);
         if (lead is null || !lead.EstaAtivo)
         {
-            return EditarLeadResult.Falha(MensagemLeadNaoEncontrado, EditarLeadErro.NaoEncontrado);
+            return Resultado<EditarLeadErro>.Falha(MensagemLeadNaoEncontrado, EditarLeadErro.NaoEncontrado);
         }
 
         try
@@ -28,7 +29,7 @@ public class EditarLeadUseCase
         }
         catch (ArgumentException ex)
         {
-            return EditarLeadResult.Falha(ex.Message);
+            return Resultado<EditarLeadErro>.Falha(ex.Message);
         }
 
         var telefoneNormalizadoNovo = Lead.NormalizarTelefone(telefone);
@@ -37,14 +38,10 @@ public class EditarLeadUseCase
             var outroComMesmoTelefone = await _repositorio.BuscarPorTelefoneNormalizadoAsync(telefoneNormalizadoNovo);
             if (outroComMesmoTelefone is not null && outroComMesmoTelefone.Id != lead.Id)
             {
-                return EditarLeadResult.Falha(MensagemTelefoneDuplicado, EditarLeadErro.TelefoneDuplicado);
+                return Resultado<EditarLeadErro>.Falha(MensagemTelefoneDuplicado, EditarLeadErro.TelefoneDuplicado);
             }
         }
 
-        // Se o lead já possui um endereço e um novo endereço foi informado, reaproveita
-        // a mesma instância/linha (evita órfão na tabela enderecos a cada edição).
-        // Só cria um Endereco novo quando o lead ainda não tinha nenhum.
-        // Endereço nulo é um "limpar endereço" explícito.
         Endereco? enderecoAtualizado;
         if (endereco is null)
         {
@@ -63,6 +60,6 @@ public class EditarLeadUseCase
         lead.AtualizarDados(nome, telefone, instagram, enderecoAtualizado, origem, grupoId);
         await _repositorio.AtualizarAsync(lead);
 
-        return EditarLeadResult.ComSucesso();
+        return Resultado<EditarLeadErro>.ComSucesso();
     }
 }

@@ -17,4 +17,15 @@ public class FakeUsuarioRepository : IUsuarioRepository
         _usuarios.Add(usuario);
         return Task.CompletedTask;
     }
+
+    public Task<bool> AdicionarSeForOPrimeiroAsync(Usuario usuario)
+    {
+        if (_usuarios.Count > 0)
+        {
+            return Task.FromResult(false);
+        }
+
+        _usuarios.Add(usuario);
+        return Task.FromResult(true);
+    }
 }

@@ -18,12 +18,12 @@ public class ReenviarFalhasUseCaseTests
         await new CriarLeadUseCase(leadRepositorio).ExecutarAsync("Lead1", "11911111111", null, null, null, grupoId);
         var criada = await new CriarCampanhaUseCase(campanhaRepositorio, envioRepositorio, leadRepositorio, new FakeUnitOfWork())
             .ExecutarAsync("Campanha", "Msg", grupoId, null);
-        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.CampanhaId!.Value);
+        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.Valor);
         var envio = envioRepositorio.Todos.First(e => e.CampanhaId == campanha!.Id);
         envio.MarcarComoFalhou("Erro");
         await envioRepositorio.AtualizarAsync(envio);
         campanha!.Iniciar();
-        campanha.Concluir();
+        campanha.Concluir(comFalhas: true);
         await campanhaRepositorio.AtualizarAsync(campanha);
         var scheduler = new FakeCampanhaJobScheduler();
         var useCase = new ReenviarFalhasUseCase(campanhaRepositorio, envioRepositorio, scheduler);
@@ -41,11 +41,7 @@ public class ReenviarFalhasUseCaseTests
     [Fact]
     public async Task DeveReagendar_QuandoCampanhaJaEstaEmAndamento()
     {
-        // Campanha EmAndamento não garante que a cadeia de disparo ainda esteja viva: ela
-        // pode ter esgotado os pendentes e parado de reagendar sozinha (aguardando só
-        // confirmação de entrega). Por isso sempre reagenda aqui — é seguro mesmo se a
-        // cadeia original ainda estiver ativa, pois o lock distribuído por campanha em
-        // CampanhaSendJob serializa as execuções concorrentes.
+
         var leadRepositorio = new FakeLeadRepository();
         var campanhaRepositorio = new FakeCampanhaRepository();
         var envioRepositorio = new FakeEnvioRepository();
@@ -53,7 +49,7 @@ public class ReenviarFalhasUseCaseTests
         await new CriarLeadUseCase(leadRepositorio).ExecutarAsync("Lead1", "11911111111", null, null, null, grupoId);
         var criada = await new CriarCampanhaUseCase(campanhaRepositorio, envioRepositorio, leadRepositorio, new FakeUnitOfWork())
             .ExecutarAsync("Campanha", "Msg", grupoId, null);
-        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.CampanhaId!.Value);
+        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.Valor);
         var envio = envioRepositorio.Todos.First(e => e.CampanhaId == campanha!.Id);
         envio.MarcarComoFalhou("Erro");
         await envioRepositorio.AtualizarAsync(envio);
@@ -84,7 +80,7 @@ public class ReenviarFalhasUseCaseTests
         var scheduler = new FakeCampanhaJobScheduler();
         var useCase = new ReenviarFalhasUseCase(campanhaRepositorio, envioRepositorio, scheduler);
 
-        await useCase.ExecutarAsync(criada.CampanhaId!.Value);
+        await useCase.ExecutarAsync(criada.Valor);
 
         Assert.Empty(scheduler.Agendamentos);
     }

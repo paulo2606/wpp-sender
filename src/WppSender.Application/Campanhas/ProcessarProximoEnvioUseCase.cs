@@ -52,7 +52,8 @@ public class ProcessarProximoEnvioUseCase
         var envio = await _envioRepositorio.BuscarProximoPendenteAsync(campanhaId);
         if (envio is null)
         {
-            campanha.Concluir();
+            var contagensAtuais = await _envioRepositorio.ContarPorStatusAsync(campanhaId);
+            campanha.Concluir(TemFalha(contagensAtuais));
             await _campanhaRepositorio.AtualizarAsync(campanha);
             return;
         }
@@ -76,8 +77,7 @@ public class ProcessarProximoEnvioUseCase
         }
         catch (Exception ex)
         {
-            // Falha de transporte (conexão recusada, timeout, DNS etc.) não pode propagar:
-            // isso derrubaria o motor e faria o Hangfire tentar novamente consumindo o cap diário.
+
             resultadoEnvio = new ResultadoEnvioMensagem(false, ex.Message);
         }
 
@@ -95,15 +95,11 @@ public class ProcessarProximoEnvioUseCase
         var aindaTemPendente = await _envioRepositorio.BuscarProximoPendenteAsync(campanhaId);
         if (aindaTemPendente is null)
         {
-            // Se sobrou algum envio "Enviado" (despachado, aguardando confirmação de entrega),
-            // não conclui aqui — quem decide é o AtualizarStatusEntregaUseCase, quando o ACK
-            // chegar. Mas se todo envio já está num estado final (ex.: só Falhou, nenhum chegou
-            // a sair de verdade), não há mais nada a esperar: conclui já, senão a campanha fica
-            // travada em EmAndamento pra sempre, sem ninguém mais reavaliando o status dela.
+
             var contagens = await _envioRepositorio.ContarPorStatusAsync(campanhaId);
             if (contagens.GetValueOrDefault(StatusEnvio.Enviado) == 0)
             {
-                campanha.Concluir();
+                campanha.Concluir(TemFalha(contagens));
                 await _campanhaRepositorio.AtualizarAsync(campanha);
             }
 
@@ -113,4 +109,7 @@ public class ProcessarProximoEnvioUseCase
         var atrasoSegundos = Random.Shared.Next(campanha.IntervaloMinSegundos, campanha.IntervaloMaxSegundos + 1);
         await _jobScheduler.AgendarProximoEnvioAsync(campanhaId, TimeSpan.FromSeconds(atrasoSegundos));
     }
+
+    private static bool TemFalha(IReadOnlyDictionary<StatusEnvio, int> contagens) =>
+        contagens.GetValueOrDefault(StatusEnvio.Falhou) > 0 || contagens.GetValueOrDefault(StatusEnvio.FalhouEntrega) > 0;
 }

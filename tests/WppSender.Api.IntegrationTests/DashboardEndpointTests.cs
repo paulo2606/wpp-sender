@@ -19,8 +19,7 @@ public class DashboardEndpointTests : IAsyncLifetime
         var registro = await _client.PostAsJsonAsync("/api/auth/registrar", new { email = "admin@teste.com", senha = "senhaAdmin123" });
         registro.EnsureSuccessStatusCode();
         var login = await _client.PostAsJsonAsync("/api/auth/login", new { email = "admin@teste.com", senha = "senhaAdmin123" });
-        var corpo = await login.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", corpo!["token"]);
+        login.EnsureSuccessStatusCode();
     }
 
     public async Task DisposeAsync()

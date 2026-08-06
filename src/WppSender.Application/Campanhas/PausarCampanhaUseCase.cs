@@ -1,4 +1,5 @@
 using WppSender.Domain;
+using WppSender.Application.Shared;
 
 namespace WppSender.Application.Campanhas;
 
@@ -14,12 +15,12 @@ public class PausarCampanhaUseCase
         _repositorio = repositorio;
     }
 
-    public async Task<PausarCampanhaResult> ExecutarAsync(Guid campanhaId)
+    public async Task<Resultado<PausarCampanhaErro>> ExecutarAsync(Guid campanhaId)
     {
         var campanha = await _repositorio.BuscarPorIdAsync(campanhaId);
         if (campanha is null)
         {
-            return PausarCampanhaResult.Falha(MensagemNaoEncontrada, PausarCampanhaErro.NaoEncontrada);
+            return Resultado<PausarCampanhaErro>.Falha(MensagemNaoEncontrada, PausarCampanhaErro.NaoEncontrada);
         }
 
         try
@@ -28,11 +29,11 @@ public class PausarCampanhaUseCase
         }
         catch (InvalidOperationException)
         {
-            return PausarCampanhaResult.Falha(MensagemStatusInvalido, PausarCampanhaErro.StatusInvalido);
+            return Resultado<PausarCampanhaErro>.Falha(MensagemStatusInvalido, PausarCampanhaErro.StatusInvalido);
         }
 
         await _repositorio.AtualizarAsync(campanha);
 
-        return PausarCampanhaResult.ComSucesso();
+        return Resultado<PausarCampanhaErro>.ComSucesso();
     }
 }

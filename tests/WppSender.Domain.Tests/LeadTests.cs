@@ -37,6 +37,22 @@ public class LeadTests
     }
 
     [Fact]
+    public void DeveAnonimizarDadosPessoais_AposExcluir()
+    {
+        var lead = new Lead(Guid.NewGuid(), "Fulano da Silva", "11912345678", "fulano_insta",
+            new Endereco(Guid.NewGuid(), "Rua A", "1", null, "Centro", "SP", "SP", "00000000"), "site", Guid.NewGuid());
+
+        lead.Excluir();
+
+        Assert.Equal("Lead excluído", lead.Nome);
+        Assert.Equal(string.Empty, lead.TelefoneNormalizado);
+        Assert.Null(lead.Instagram);
+        Assert.Null(lead.Endereco);
+        Assert.Null(lead.Origem);
+        Assert.Null(lead.GrupoId);
+    }
+
+    [Fact]
     public void AtualizarDados_DeveNormalizarNovoTelefone()
     {
         var lead = new Lead(Guid.NewGuid(), "Fulano", "11912345678", null, null, null);

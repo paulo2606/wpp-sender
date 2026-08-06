@@ -50,9 +50,7 @@ public class ImportarLeadsCsvUseCase
             }
             catch (ArgumentException ex)
             {
-                // Nome/telefone ausentes no valor da linha (não a coluna do cabeçalho, que já
-                // é tratada pelo parser). Pula a linha em vez de derrubar o import inteiro,
-                // já que Lead agora impõe esse invariante em nível de domínio.
+
                 puladas.Add(new LeadPulado(linha.NumeroLinha, linha.Telefone, ex.Message));
                 continue;
             }

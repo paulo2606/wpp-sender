@@ -1,4 +1,5 @@
 using WppSender.Domain;
+using WppSender.Application.Shared;
 
 namespace WppSender.Application.Leads;
 
@@ -13,14 +14,14 @@ public class ObterLeadUseCase
         _repositorio = repositorio;
     }
 
-    public async Task<ObterLeadResult> ExecutarAsync(Guid id)
+    public async Task<ResultadoComValor<LeadResumo>> ExecutarAsync(Guid id)
     {
         var lead = await _repositorio.BuscarPorIdAsync(id);
         if (lead is null || !lead.EstaAtivo)
         {
-            return ObterLeadResult.Falha(MensagemLeadNaoEncontrado);
+            return ResultadoComValor<LeadResumo>.Falha(MensagemLeadNaoEncontrado);
         }
 
-        return ObterLeadResult.ComSucesso(LeadResumo.DeLead(lead));
+        return ResultadoComValor<LeadResumo>.ComSucesso(LeadResumo.DeLead(lead));
     }
 }

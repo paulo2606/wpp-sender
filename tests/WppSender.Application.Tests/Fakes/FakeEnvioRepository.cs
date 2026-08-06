@@ -16,10 +16,7 @@ public class FakeEnvioRepository : IEnvioRepository
 
     public Task<Envio?> BuscarProximoPendenteAsync(Guid campanhaId)
     {
-        // Sem OrderBy(e => e.Id) de propósito: o Id do envio é um Guid aleatório
-        // sem relação com a ordem de inserção, então ordenar por ele tornaria o
-        // "próximo pendente" não-determinístico. A ordem natural da List (preservada
-        // pelo Where) reflete a ordem de criação dos envios (FIFO).
+
         var resultado = _envios
             .Where(e => e.CampanhaId == campanhaId && e.Status == StatusEnvio.Pendente)
             .FirstOrDefault();
@@ -56,12 +53,8 @@ public class FakeEnvioRepository : IEnvioRepository
         return Task.FromResult<IReadOnlyDictionary<StatusEnvio, int>>(contagens);
     }
 
-    // Exposto pros testes do motor de envio (Task 6) inspecionarem o estado bruto.
     public IReadOnlyList<Envio> Todos => _envios;
 
-    // Testes que precisam simular uma campanha Cancelada (pra provar que o polling de ACK
-    // ignora envios dela) registram o status aqui; campanhas ausentes são tratadas como
-    // rastreáveis por padrão, já que a maioria dos testes não se importa com isso.
     public Dictionary<Guid, StatusCampanha> StatusCampanhas { get; } = new();
 
     public Task<IReadOnlyList<Envio>> ListarAguardandoConfirmacaoAsync()

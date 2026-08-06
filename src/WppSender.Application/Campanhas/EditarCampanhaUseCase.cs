@@ -1,4 +1,5 @@
 using WppSender.Domain;
+using WppSender.Application.Shared;
 
 namespace WppSender.Application.Campanhas;
 
@@ -14,17 +15,17 @@ public class EditarCampanhaUseCase
         _repositorio = repositorio;
     }
 
-    public async Task<EditarCampanhaResult> ExecutarAsync(Guid id, string nome, string mensagem, DateTime? agendadoPara, int intervaloMinSegundos, int intervaloMaxSegundos)
+    public async Task<Resultado<EditarCampanhaErro>> ExecutarAsync(Guid id, string nome, string mensagem, DateTime? agendadoPara, int intervaloMinSegundos, int intervaloMaxSegundos)
     {
         var campanha = await _repositorio.BuscarPorIdAsync(id);
         if (campanha is null)
         {
-            return EditarCampanhaResult.Falha(MensagemNaoEncontrada, EditarCampanhaErro.NaoEncontrada);
+            return Resultado<EditarCampanhaErro>.Falha(MensagemNaoEncontrada, EditarCampanhaErro.NaoEncontrada);
         }
 
         if (!campanha.PodeEditar())
         {
-            return EditarCampanhaResult.Falha(MensagemNaoPermiteEdicao, EditarCampanhaErro.NaoPermiteEdicao);
+            return Resultado<EditarCampanhaErro>.Falha(MensagemNaoPermiteEdicao, EditarCampanhaErro.NaoPermiteEdicao);
         }
 
         try
@@ -33,11 +34,11 @@ public class EditarCampanhaUseCase
         }
         catch (ArgumentException ex)
         {
-            return EditarCampanhaResult.Falha(ex.Message);
+            return Resultado<EditarCampanhaErro>.Falha(ex.Message);
         }
 
         await _repositorio.AtualizarAsync(campanha);
 
-        return EditarCampanhaResult.ComSucesso();
+        return Resultado<EditarCampanhaErro>.ComSucesso();
     }
 }

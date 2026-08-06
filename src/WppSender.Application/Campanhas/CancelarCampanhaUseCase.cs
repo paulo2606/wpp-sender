@@ -1,4 +1,5 @@
 using WppSender.Domain;
+using WppSender.Application.Shared;
 
 namespace WppSender.Application.Campanhas;
 
@@ -17,12 +18,12 @@ public class CancelarCampanhaUseCase
         _envioRepositorio = envioRepositorio;
     }
 
-    public async Task<CancelarCampanhaResult> ExecutarAsync(Guid campanhaId)
+    public async Task<Resultado<CancelarCampanhaErro>> ExecutarAsync(Guid campanhaId)
     {
         var campanha = await _campanhaRepositorio.BuscarPorIdAsync(campanhaId);
         if (campanha is null)
         {
-            return CancelarCampanhaResult.Falha(MensagemNaoEncontrada, CancelarCampanhaErro.NaoEncontrada);
+            return Resultado<CancelarCampanhaErro>.Falha(MensagemNaoEncontrada, CancelarCampanhaErro.NaoEncontrada);
         }
 
         try
@@ -31,12 +32,9 @@ public class CancelarCampanhaUseCase
         }
         catch (InvalidOperationException)
         {
-            return CancelarCampanhaResult.Falha(MensagemStatusInvalido, CancelarCampanhaErro.StatusInvalido);
+            return Resultado<CancelarCampanhaErro>.Falha(MensagemStatusInvalido, CancelarCampanhaErro.StatusInvalido);
         }
 
-        // Envios ainda pendentes não serão mais disparados: viram falha.
-        // Envios já "Enviado" (despachados, aguardando confirmação) não são tocados aqui —
-        // o AtualizarStatusEntregaUseCase para de rastreá-los assim que a campanha vira Cancelada.
         var pendente = await _envioRepositorio.BuscarProximoPendenteAsync(campanhaId);
         while (pendente is not null)
         {
@@ -47,6 +45,6 @@ public class CancelarCampanhaUseCase
 
         await _campanhaRepositorio.AtualizarAsync(campanha);
 
-        return CancelarCampanhaResult.ComSucesso();
+        return Resultado<CancelarCampanhaErro>.ComSucesso();
     }
 }

@@ -29,14 +29,14 @@ public class ExportarLeadsCsvUseCaseTests
         var excluirUseCase = new ExcluirLeadUseCase(repositorio);
         var ativo = await criarUseCase.ExecutarAsync("Ana", "11911111111", null, null, null);
         var excluido = await criarUseCase.ExecutarAsync("Bruno", "11922222222", null, null, null);
-        await excluirUseCase.ExecutarAsync(excluido.LeadId!.Value);
+        await excluirUseCase.ExecutarAsync(excluido.Valor);
         var writer = new FakeLeadCsvWriter();
         var useCase = new ExportarLeadsCsvUseCase(repositorio, new FakeGrupoRepository(), writer);
 
         await useCase.ExecutarAsync(Stream.Null);
 
         Assert.Single(writer.LeadsRecebidos);
-        Assert.Equal(ativo.LeadId, writer.LeadsRecebidos[0].Id);
+        Assert.Equal(ativo.Valor, writer.LeadsRecebidos[0].Id);
     }
 
     [Fact]

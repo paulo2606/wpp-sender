@@ -36,4 +36,20 @@ public class EfUsuarioRepository : IUsuarioRepository
             throw new InvalidOperationException("Já existe um usuário cadastrado", ex);
         }
     }
+
+    public async Task<bool> AdicionarSeForOPrimeiroAsync(Usuario usuario)
+    {
+        await using var transacao = await _db.Database.BeginTransactionAsync();
+        await _db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(727001)");
+
+        if (await _db.Usuarios.AnyAsync())
+        {
+            return false;
+        }
+
+        await _db.Usuarios.AddAsync(usuario);
+        await _db.SaveChangesAsync();
+        await transacao.CommitAsync();
+        return true;
+    }
 }

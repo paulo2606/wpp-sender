@@ -41,9 +41,6 @@ public class WppSenderApiFactory : WebApplicationFactory<Program>, IAsyncLifetim
             });
         });
 
-        // Não há serviço WhatsApp/Baileys real disponível em ambiente de teste, então o
-        // HttpWhatsAppClient (que dependeria de uma chamada HTTP real) é substituído por
-        // um fake determinístico para todos os testes de integração.
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IWhatsAppClient>();

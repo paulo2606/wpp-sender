@@ -1,4 +1,5 @@
 using WppSender.Domain;
+using WppSender.Application.Shared;
 
 namespace WppSender.Application.Campanhas;
 
@@ -19,18 +20,18 @@ public class RetomarCampanhaUseCase
         _jobScheduler = jobScheduler;
     }
 
-    public async Task<RetomarCampanhaResult> ExecutarAsync(Guid campanhaId)
+    public async Task<Resultado<RetomarCampanhaErro>> ExecutarAsync(Guid campanhaId)
     {
         var campanha = await _campanhaRepositorio.BuscarPorIdAsync(campanhaId);
         if (campanha is null)
         {
-            return RetomarCampanhaResult.Falha(MensagemNaoEncontrada, RetomarCampanhaErro.NaoEncontrada);
+            return Resultado<RetomarCampanhaErro>.Falha(MensagemNaoEncontrada, RetomarCampanhaErro.NaoEncontrada);
         }
 
         var sessao = await _sessaoRepositorio.ObterAsync();
         if (sessao.Status != StatusSessaoWhatsApp.Conectado)
         {
-            return RetomarCampanhaResult.Falha(MensagemSessaoDesconectada, RetomarCampanhaErro.SessaoDesconectada);
+            return Resultado<RetomarCampanhaErro>.Falha(MensagemSessaoDesconectada, RetomarCampanhaErro.SessaoDesconectada);
         }
 
         try
@@ -39,12 +40,12 @@ public class RetomarCampanhaUseCase
         }
         catch (InvalidOperationException)
         {
-            return RetomarCampanhaResult.Falha(MensagemStatusInvalido, RetomarCampanhaErro.StatusInvalido);
+            return Resultado<RetomarCampanhaErro>.Falha(MensagemStatusInvalido, RetomarCampanhaErro.StatusInvalido);
         }
 
         await _campanhaRepositorio.AtualizarAsync(campanha);
         await _jobScheduler.AgendarProximoEnvioAsync(campanha.Id, TimeSpan.Zero);
 
-        return RetomarCampanhaResult.ComSucesso();
+        return Resultado<RetomarCampanhaErro>.ComSucesso();
     }
 }

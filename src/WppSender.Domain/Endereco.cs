@@ -23,9 +23,6 @@ public class Endereco
         Cep = cep;
     }
 
-    // Muta a instância existente em vez de criar um novo Endereco, para que
-    // EditarLeadUseCase possa reaproveitar a mesma linha na tabela enderecos
-    // ao invés de órfão a antiga e criar uma nova a cada edição.
     public void AtualizarDados(string rua, string numero, string? complemento, string bairro, string cidade, string estado, string cep)
     {
         Rua = rua;

@@ -31,9 +31,6 @@ public class Lead
         CriadoEm = DateTime.UtcNow;
     }
 
-    // Construtor privado usado pelo EF Core para materializar a entidade.
-    // Necessário porque o construtor público recebe a navegação Endereco,
-    // que o EF Core não consegue vincular via construtor.
     private Lead()
     {
         Nome = null!;
@@ -60,6 +57,12 @@ public class Lead
     public void Excluir()
     {
         DeletadoEm = DateTime.UtcNow;
+        Nome = "Lead excluído";
+        TelefoneNormalizado = string.Empty;
+        Instagram = null;
+        Endereco = null;
+        Origem = null;
+        GrupoId = null;
     }
 
     public static string NormalizarTelefone(string telefone)

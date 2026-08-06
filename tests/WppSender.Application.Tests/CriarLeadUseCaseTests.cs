@@ -15,7 +15,6 @@ public class CriarLeadUseCaseTests
         var resultado = await useCase.ExecutarAsync("Fulano", "11912345678", "fulano_insta", null, "site");
 
         Assert.True(resultado.Sucesso);
-        Assert.NotNull(resultado.LeadId);
         var criado = await repositorio.BuscarPorTelefoneNormalizadoAsync("11912345678");
         Assert.NotNull(criado);
         Assert.Equal("Fulano", criado!.Nome);
@@ -48,7 +47,6 @@ public class CriarLeadUseCaseTests
 
         Assert.False(resultado.Sucesso);
         Assert.Equal("Telefone já cadastrado", resultado.MensagemErro);
-        Assert.Null(resultado.LeadId);
     }
 
     [Theory]
@@ -65,7 +63,6 @@ public class CriarLeadUseCaseTests
 
         Assert.False(resultado.Sucesso);
         Assert.NotNull(resultado.MensagemErro);
-        Assert.Null(resultado.LeadId);
     }
 
     [Fact]
@@ -74,7 +71,7 @@ public class CriarLeadUseCaseTests
         var repositorio = new FakeLeadRepository();
         var useCase = new CriarLeadUseCase(repositorio);
         var primeiroResultado = await useCase.ExecutarAsync("Primeiro", "11912345678", null, null, null);
-        var primeiroLead = await repositorio.BuscarPorIdAsync(primeiroResultado.LeadId!.Value);
+        var primeiroLead = await repositorio.BuscarPorIdAsync(primeiroResultado.Valor);
         primeiroLead!.Excluir();
         await repositorio.AtualizarAsync(primeiroLead);
 
@@ -93,7 +90,7 @@ public class CriarLeadUseCaseTests
         var resultado = await useCase.ExecutarAsync("Fulano", "11912345678", null, null, null, grupoId);
 
         Assert.True(resultado.Sucesso);
-        var criado = await repositorio.BuscarPorIdAsync(resultado.LeadId!.Value);
+        var criado = await repositorio.BuscarPorIdAsync(resultado.Valor);
         Assert.Equal(grupoId, criado!.GrupoId);
     }
 }

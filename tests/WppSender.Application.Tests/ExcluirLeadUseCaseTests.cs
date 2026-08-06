@@ -14,10 +14,10 @@ public class ExcluirLeadUseCaseTests
         var excluirUseCase = new ExcluirLeadUseCase(repositorio);
         var criado = await criarUseCase.ExecutarAsync("Fulano", "11911111111", null, null, null);
 
-        var resultado = await excluirUseCase.ExecutarAsync(criado.LeadId!.Value);
+        var resultado = await excluirUseCase.ExecutarAsync(criado.Valor);
 
         Assert.True(resultado.Sucesso);
-        var lead = await repositorio.BuscarPorIdAsync(criado.LeadId.Value);
+        var lead = await repositorio.BuscarPorIdAsync(criado.Valor);
         Assert.False(lead!.EstaAtivo);
         Assert.NotNull(lead.DeletadoEm);
     }
@@ -30,7 +30,7 @@ public class ExcluirLeadUseCaseTests
         var excluirUseCase = new ExcluirLeadUseCase(repositorio);
         var criado = await criarUseCase.ExecutarAsync("Fulano", "11911111111", null, null, null);
 
-        await excluirUseCase.ExecutarAsync(criado.LeadId!.Value);
+        await excluirUseCase.ExecutarAsync(criado.Valor);
 
         var (itens, total) = await repositorio.ListarAsync(null, 1, 10);
         Assert.Empty(itens);
@@ -56,9 +56,9 @@ public class ExcluirLeadUseCaseTests
         var criarUseCase = new CriarLeadUseCase(repositorio);
         var excluirUseCase = new ExcluirLeadUseCase(repositorio);
         var criado = await criarUseCase.ExecutarAsync("Fulano", "11911111111", null, null, null);
-        await excluirUseCase.ExecutarAsync(criado.LeadId!.Value);
+        await excluirUseCase.ExecutarAsync(criado.Valor);
 
-        var resultado = await excluirUseCase.ExecutarAsync(criado.LeadId.Value);
+        var resultado = await excluirUseCase.ExecutarAsync(criado.Valor);
 
         Assert.False(resultado.Sucesso);
         Assert.Equal("Lead não encontrado", resultado.MensagemErro);

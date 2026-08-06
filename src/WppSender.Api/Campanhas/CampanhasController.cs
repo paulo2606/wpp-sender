@@ -57,7 +57,7 @@ public class CampanhasController : ControllerBase
             return BadRequest(new ErroResponse(resultado.MensagemErro!));
         }
 
-        return Ok(new { id = resultado.CampanhaId });
+        return Ok(new { id = resultado.Valor });
     }
 
     [HttpPut("{id:guid}")]

@@ -1,4 +1,5 @@
 using WppSender.Domain;
+using WppSender.Application.Shared;
 
 namespace WppSender.Application.Campanhas;
 
@@ -14,21 +15,21 @@ public class ExcluirCampanhaUseCase
         _repositorio = repositorio;
     }
 
-    public async Task<ExcluirCampanhaResult> ExecutarAsync(Guid id)
+    public async Task<Resultado<ExcluirCampanhaErro>> ExecutarAsync(Guid id)
     {
         var campanha = await _repositorio.BuscarPorIdAsync(id);
         if (campanha is null)
         {
-            return ExcluirCampanhaResult.Falha(MensagemNaoEncontrada, ExcluirCampanhaErro.NaoEncontrada);
+            return Resultado<ExcluirCampanhaErro>.Falha(MensagemNaoEncontrada, ExcluirCampanhaErro.NaoEncontrada);
         }
 
         if (!campanha.PodeExcluir())
         {
-            return ExcluirCampanhaResult.Falha(MensagemNaoPermiteExclusao, ExcluirCampanhaErro.NaoPermiteExclusao);
+            return Resultado<ExcluirCampanhaErro>.Falha(MensagemNaoPermiteExclusao, ExcluirCampanhaErro.NaoPermiteExclusao);
         }
 
         await _repositorio.RemoverAsync(campanha);
 
-        return ExcluirCampanhaResult.ComSucesso();
+        return Resultado<ExcluirCampanhaErro>.ComSucesso();
     }
 }

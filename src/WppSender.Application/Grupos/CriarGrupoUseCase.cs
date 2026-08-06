@@ -1,4 +1,5 @@
 using WppSender.Domain;
+using WppSender.Application.Shared;
 
 namespace WppSender.Application.Grupos;
 
@@ -17,11 +18,11 @@ public class CriarGrupoUseCase
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<CriarGrupoResult> ExecutarAsync(string nome, string? descricao, IReadOnlyList<Guid> leadIds)
+    public async Task<ResultadoComValor<Guid>> ExecutarAsync(string nome, string? descricao, IReadOnlyList<Guid> leadIds)
     {
         if (leadIds is null || leadIds.Count == 0)
         {
-            return CriarGrupoResult.Falha(MensagemListaLeadsVazia);
+            return ResultadoComValor<Guid>.Falha(MensagemListaLeadsVazia);
         }
 
         var leadsValidos = new List<Lead>();
@@ -42,7 +43,7 @@ public class CriarGrupoUseCase
         if (idsInvalidos.Count > 0)
         {
             var listaIds = string.Join(", ", idsInvalidos);
-            return CriarGrupoResult.Falha($"Leads inválidos ou não encontrados: {listaIds}");
+            return ResultadoComValor<Guid>.Falha($"Leads inválidos ou não encontrados: {listaIds}");
         }
 
         Grupo grupo;
@@ -52,7 +53,7 @@ public class CriarGrupoUseCase
         }
         catch (ArgumentException ex)
         {
-            return CriarGrupoResult.Falha(ex.Message);
+            return ResultadoComValor<Guid>.Falha(ex.Message);
         }
 
         await _unitOfWork.ExecutarTransacaoAsync(async () =>
@@ -65,6 +66,6 @@ public class CriarGrupoUseCase
             }
         });
 
-        return CriarGrupoResult.ComSucesso(grupo.Id);
+        return ResultadoComValor<Guid>.ComSucesso(grupo.Id);
     }
 }

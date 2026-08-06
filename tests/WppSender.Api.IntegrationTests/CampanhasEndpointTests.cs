@@ -21,8 +21,7 @@ public class CampanhasEndpointTests : IAsyncLifetime
         var registro = await _client.PostAsJsonAsync("/api/auth/registrar", new { email = "admin@teste.com", senha = "senhaAdmin123" });
         registro.EnsureSuccessStatusCode();
         var login = await _client.PostAsJsonAsync("/api/auth/login", new { email = "admin@teste.com", senha = "senhaAdmin123" });
-        var corpo = await login.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", corpo!["token"]);
+        login.EnsureSuccessStatusCode();
     }
 
     public async Task DisposeAsync()
@@ -79,7 +78,7 @@ public class CampanhasEndpointTests : IAsyncLifetime
     public async Task DeveRetornarBadRequest_QuandoGrupoSemLeadsAtivos()
     {
         var grupoVazio = await _client.PostAsJsonAsync("/api/grupos", new { nome = "Grupo Vazio Teste", descricao = (string?)null, leadIds = new Guid[0] });
-        // Grupo sem leads não pode ser criado via API normal (RF05), então simula com um grupo id inexistente:
+
         var resposta = await _client.PostAsJsonAsync("/api/campanhas", new
         {
             nome = "Campanha",

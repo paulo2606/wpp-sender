@@ -12,19 +12,22 @@ public class DashboardController : ControllerBase
     private readonly CalcularTaxaEnvioUseCase _calcularTaxaEnvioUseCase;
     private readonly ContarLeadsPorGrupoUseCase _contarLeadsPorGrupoUseCase;
     private readonly ObterProximaCampanhaAgendadaUseCase _obterProximaCampanhaUseCase;
+    private readonly ObterLimiteDiarioEnvioUseCase _obterLimiteDiarioEnvioUseCase;
 
     public DashboardController(
         ContarCampanhasPorStatusUseCase contarCampanhasUseCase,
         ContarLeadsRecentesUseCase contarLeadsRecentesUseCase,
         CalcularTaxaEnvioUseCase calcularTaxaEnvioUseCase,
         ContarLeadsPorGrupoUseCase contarLeadsPorGrupoUseCase,
-        ObterProximaCampanhaAgendadaUseCase obterProximaCampanhaUseCase)
+        ObterProximaCampanhaAgendadaUseCase obterProximaCampanhaUseCase,
+        ObterLimiteDiarioEnvioUseCase obterLimiteDiarioEnvioUseCase)
     {
         _contarCampanhasUseCase = contarCampanhasUseCase;
         _contarLeadsRecentesUseCase = contarLeadsRecentesUseCase;
         _calcularTaxaEnvioUseCase = calcularTaxaEnvioUseCase;
         _contarLeadsPorGrupoUseCase = contarLeadsPorGrupoUseCase;
         _obterProximaCampanhaUseCase = obterProximaCampanhaUseCase;
+        _obterLimiteDiarioEnvioUseCase = obterLimiteDiarioEnvioUseCase;
     }
 
     [HttpGet("campanhas-por-status")]
@@ -65,5 +68,13 @@ public class DashboardController : ControllerBase
         var resultado = await _obterProximaCampanhaUseCase.ExecutarAsync();
 
         return resultado is null ? NotFound() : Ok(resultado);
+    }
+
+    [HttpGet("limite-diario-envios")]
+    public async Task<IActionResult> LimiteDiarioEnvios()
+    {
+        var resultado = await _obterLimiteDiarioEnvioUseCase.ExecutarAsync();
+
+        return Ok(resultado);
     }
 }

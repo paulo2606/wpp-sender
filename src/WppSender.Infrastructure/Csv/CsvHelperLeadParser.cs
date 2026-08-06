@@ -7,10 +7,7 @@ namespace WppSender.Infrastructure.Csv;
 
 public class CsvHelperLeadParser : ILeadCsvParser
 {
-    // Mesmo conjunto de caracteres usado pelo CsvHelperLeadWriter para sanitizar contra
-    // CSV Formula Injection. Usado aqui só para reconhecer e remover o prefixo de aspas
-    // simples que o writer adiciona, evitando que ele se acumule a cada ciclo de
-    // exportação seguida de reimportação.
+
     private static readonly char[] CaracteresDeFormula = ['=', '+', '-', '@', '\t', '\r'];
 
     public IEnumerable<LeadCsvLinha> Parse(Stream csv)
@@ -49,9 +46,6 @@ public class CsvHelperLeadParser : ILeadCsvParser
         }
     }
 
-    // Remove apenas o prefixo que o próprio sanitizador do writer adiciona (aspas simples
-    // seguida imediatamente de um caractere de fórmula). Um apóstrofo real no início de um
-    // nome (ex.: "O'Brien") não é seguido por um desses caracteres e permanece intacto.
     private static string? RemoverPrefixoDeSanitizacao(string? valor)
     {
         if (valor is not null && valor.Length >= 2 && valor[0] == '\'' && Array.IndexOf(CaracteresDeFormula, valor[1]) >= 0)

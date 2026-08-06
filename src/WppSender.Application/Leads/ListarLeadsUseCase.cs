@@ -16,9 +16,7 @@ public class ListarLeadsUseCase
 
     public async Task<ListaLeadsResultado> ExecutarAsync(string? busca, int pagina, int tamanhoPagina, Guid? grupoId = null)
     {
-        // Clampa aqui, na fronteira única entre a API e os repositórios, para que tanto
-        // o FakeLeadRepository (testes) quanto o EfLeadRepository (Postgres) nunca recebam
-        // uma página/tamanho inválido — Postgres rejeita OFFSET negativo com um 500.
+
         var paginaValida = Math.Max(pagina, TamanhoPaginaMinimo);
         var tamanhoPaginaValido = Math.Clamp(tamanhoPagina, TamanhoPaginaMinimo, TamanhoPaginaMaximo);
 

@@ -42,8 +42,25 @@ public class AuthEndpointTests : IAsyncLifetime
 
         var respostaLogin = await client.PostAsJsonAsync("/api/auth/login", new { email = Email, senha = Senha });
         Assert.Equal(HttpStatusCode.OK, respostaLogin.StatusCode);
-        var corpo = await respostaLogin.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-        Assert.False(string.IsNullOrWhiteSpace(corpo!["token"]));
+        Assert.True(respostaLogin.Headers.TryGetValues("Set-Cookie", out var cookies));
+        Assert.Contains(cookies!, c => c.StartsWith("wpp_auth=") && c.Contains("httponly", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task DeveLimparCookie_QuandoFazLogout()
+    {
+        var client = _factory.CreateClient();
+        await client.PostAsJsonAsync("/api/auth/registrar", new { email = Email, senha = Senha });
+        await client.PostAsJsonAsync("/api/auth/login", new { email = Email, senha = Senha });
+
+        var antesDoLogout = await client.GetAsync("/api/health/privado");
+        Assert.Equal(HttpStatusCode.OK, antesDoLogout.StatusCode);
+
+        var logout = await client.PostAsync("/api/auth/logout", null);
+        Assert.Equal(HttpStatusCode.OK, logout.StatusCode);
+
+        var depoisDoLogout = await client.GetAsync("/api/health/privado");
+        Assert.Equal(HttpStatusCode.Unauthorized, depoisDoLogout.StatusCode);
     }
 
     [Fact]

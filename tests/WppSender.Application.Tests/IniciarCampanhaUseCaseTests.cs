@@ -20,7 +20,7 @@ public class IniciarCampanhaUseCaseTests
         var sessaoRepositorio = new FakeSessaoWhatsAppRepository();
         var scheduler = new FakeCampanhaJobScheduler();
 
-        return (campanhaRepositorio, sessaoRepositorio, scheduler, criada.CampanhaId!.Value);
+        return (campanhaRepositorio, sessaoRepositorio, scheduler, criada.Valor);
     }
 
     [Fact]

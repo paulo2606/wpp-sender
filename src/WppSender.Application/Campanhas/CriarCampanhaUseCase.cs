@@ -1,4 +1,5 @@
 using WppSender.Domain;
+using WppSender.Application.Shared;
 
 namespace WppSender.Application.Campanhas;
 
@@ -19,12 +20,12 @@ public class CriarCampanhaUseCase
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<CriarCampanhaResult> ExecutarAsync(string nome, string mensagem, Guid grupoId, DateTime? agendadoPara, int intervaloMinSegundos = 30, int intervaloMaxSegundos = 90)
+    public async Task<ResultadoComValor<Guid>> ExecutarAsync(string nome, string mensagem, Guid grupoId, DateTime? agendadoPara, int intervaloMinSegundos = 30, int intervaloMaxSegundos = 90)
     {
         var leadsDoGrupo = await _leadRepositorio.ListarAtivosPorGrupoAsync(grupoId);
         if (leadsDoGrupo.Count == 0)
         {
-            return CriarCampanhaResult.Falha(MensagemGrupoSemLeadsAtivos);
+            return ResultadoComValor<Guid>.Falha(MensagemGrupoSemLeadsAtivos);
         }
 
         Campanha campanha;
@@ -34,7 +35,7 @@ public class CriarCampanhaUseCase
         }
         catch (ArgumentException ex)
         {
-            return CriarCampanhaResult.Falha(ex.Message);
+            return ResultadoComValor<Guid>.Falha(ex.Message);
         }
 
         await _unitOfWork.ExecutarTransacaoAsync(async () =>
@@ -44,6 +45,6 @@ public class CriarCampanhaUseCase
             await _envioRepositorio.AdicionarVariosAsync(envios);
         });
 
-        return CriarCampanhaResult.ComSucesso(campanha.Id);
+        return ResultadoComValor<Guid>.ComSucesso(campanha.Id);
     }
 }

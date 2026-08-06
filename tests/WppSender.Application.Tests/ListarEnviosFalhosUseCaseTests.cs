@@ -18,12 +18,12 @@ public class ListarEnviosFalhosUseCaseTests
         await new CriarLeadUseCase(leadRepositorio).ExecutarAsync("Lead2", "11922222222", null, null, null, grupoId);
         var criada = await new CriarCampanhaUseCase(campanhaRepositorio, envioRepositorio, leadRepositorio, new FakeUnitOfWork())
             .ExecutarAsync("Campanha", "Msg", grupoId, null);
-        var envio = envioRepositorio.Todos.First(e => e.CampanhaId == criada.CampanhaId!.Value);
+        var envio = envioRepositorio.Todos.First(e => e.CampanhaId == criada.Valor);
         envio.MarcarComoFalhou("Erro de teste");
         await envioRepositorio.AtualizarAsync(envio);
         var useCase = new ListarEnviosFalhosUseCase(envioRepositorio, leadRepositorio);
 
-        var resultado = await useCase.ExecutarAsync(criada.CampanhaId.Value);
+        var resultado = await useCase.ExecutarAsync(criada.Valor);
 
         Assert.Single(resultado);
         Assert.Equal("Erro de teste", resultado[0].Erro);

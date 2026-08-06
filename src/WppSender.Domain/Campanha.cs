@@ -26,7 +26,6 @@ public class Campanha
         Status = agendadoPara is null ? StatusCampanha.Rascunho : StatusCampanha.Agendada;
     }
 
-    // Construtor privado usado pelo EF Core para materializar a entidade.
     private Campanha()
     {
         Nome = null!;
@@ -80,14 +79,14 @@ public class Campanha
         Status = StatusCampanha.EmAndamento;
     }
 
-    public void Concluir()
+    public void Concluir(bool comFalhas)
     {
         if (Status != StatusCampanha.EmAndamento)
         {
             throw new InvalidOperationException("Campanha só pode ser concluída quando está em andamento");
         }
 
-        Status = StatusCampanha.Concluida;
+        Status = comFalhas ? StatusCampanha.ConcluidaComFalhas : StatusCampanha.Concluida;
     }
 
     public void Cancelar()
@@ -100,11 +99,9 @@ public class Campanha
         Status = StatusCampanha.Cancelada;
     }
 
-    // Usado pelo reenvio de falhas: uma campanha já concluída que ganha
-    // envios pendentes de novo precisa voltar a rodar no motor.
     public void ReabrirParaReenvio()
     {
-        if (Status == StatusCampanha.Concluida)
+        if (Status is StatusCampanha.Concluida or StatusCampanha.ConcluidaComFalhas)
         {
             Status = StatusCampanha.EmAndamento;
         }

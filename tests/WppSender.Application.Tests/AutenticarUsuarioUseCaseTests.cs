@@ -18,7 +18,7 @@ public class AutenticarUsuarioUseCaseTests
         var resultado = await useCase.ExecutarAsync("user@teste.com", "senha123");
 
         Assert.True(resultado.Sucesso);
-        Assert.Equal("token-para-user@teste.com", resultado.Token);
+        Assert.Equal("token-para-user@teste.com", resultado.Valor);
         Assert.Null(resultado.MensagemErro);
     }
 
@@ -31,7 +31,7 @@ public class AutenticarUsuarioUseCaseTests
 
         Assert.False(resultado.Sucesso);
         Assert.Equal("Email ou senha inválidos", resultado.MensagemErro);
-        Assert.Null(resultado.Token);
+        Assert.Null(resultado.Valor);
     }
 
     [Fact]
@@ -58,6 +58,6 @@ public class AutenticarUsuarioUseCaseTests
 
         Assert.False(resultado.Sucesso);
         Assert.Equal("Email ou senha inválidos", resultado.MensagemErro);
-        Assert.Null(resultado.Token);
+        Assert.Null(resultado.Valor);
     }
 }

@@ -36,7 +36,7 @@ public class ProcessarProximoEnvioUseCaseTests
 
         var criada = await new CriarCampanhaUseCase(cenario.CampanhaRepositorio, cenario.EnvioRepositorio, cenario.LeadRepositorio, new FakeUnitOfWork())
             .ExecutarAsync("Campanha", "Olá {{nome}}", grupoId, null);
-        var campanha = await cenario.CampanhaRepositorio.BuscarPorIdAsync(criada.CampanhaId!.Value);
+        var campanha = await cenario.CampanhaRepositorio.BuscarPorIdAsync(criada.Valor);
         campanha!.Iniciar();
         await cenario.CampanhaRepositorio.AtualizarAsync(campanha);
         await cenario.SessaoRepositorio.AtualizarAsync(new SessaoWhatsApp(StatusSessaoWhatsApp.Conectado));
@@ -74,10 +74,9 @@ public class ProcessarProximoEnvioUseCaseTests
 
         var contagens = await cenario.EnvioRepositorio.ContarPorStatusAsync(cenario.CampanhaId);
         Assert.Equal(1, contagens[StatusEnvio.Falhou]);
-        // Sem nenhum envio "Enviado" aguardando confirmação, não há nada a esperar do job de
-        // ACK: o motor conclui direto, senão a campanha ficaria travada em EmAndamento pra sempre.
+
         var campanha = await cenario.CampanhaRepositorio.BuscarPorIdAsync(cenario.CampanhaId);
-        Assert.Equal(StatusCampanha.Concluida, campanha!.Status);
+        Assert.Equal(StatusCampanha.ConcluidaComFalhas, campanha!.Status);
     }
 
     [Fact]
@@ -93,8 +92,7 @@ public class ProcessarProximoEnvioUseCaseTests
         var contagens = await cenario.EnvioRepositorio.ContarPorStatusAsync(cenario.CampanhaId);
         Assert.Equal(1, contagens[StatusEnvio.Falhou]);
         Assert.Equal(1, contagens[StatusEnvio.Pendente]);
-        // Prova que uma falha de envio não interrompe o motor: ele agenda o próximo passo
-        // em vez de parar, ainda havendo um segundo lead pendente.
+
         Assert.Single(cenario.Scheduler.Agendamentos);
         var campanha = await cenario.CampanhaRepositorio.BuscarPorIdAsync(cenario.CampanhaId);
         Assert.Equal(StatusCampanha.EmAndamento, campanha!.Status);
@@ -113,9 +111,7 @@ public class ProcessarProximoEnvioUseCaseTests
         var contagens = await cenario.EnvioRepositorio.ContarPorStatusAsync(cenario.CampanhaId);
         Assert.Equal(1, contagens[StatusEnvio.Falhou]);
         Assert.Equal(1, contagens[StatusEnvio.Pendente]);
-        // Uma exceção de transporte (ex.: HttpRequestException por conexão recusada) não pode
-        // propagar e derrubar o motor nem deixar a campanha travada — deve ser tratada como
-        // falha de envio comum e o próximo passo deve ser agendado normalmente.
+
         Assert.Single(cenario.Scheduler.Agendamentos);
         var campanha = await cenario.CampanhaRepositorio.BuscarPorIdAsync(cenario.CampanhaId);
         Assert.Equal(StatusCampanha.EmAndamento, campanha!.Status);
@@ -174,8 +170,6 @@ public class ProcessarProximoEnvioUseCaseTests
 
         await useCase.ExecutarAsync(cenario.CampanhaId);
 
-        // Envio único despachado, sem pendente restante: o motor para de agendar, mas a
-        // campanha continua EmAndamento até o AtualizarStatusEntregaUseCase confirmar a entrega.
         var campanha = await cenario.CampanhaRepositorio.BuscarPorIdAsync(cenario.CampanhaId);
         Assert.Equal(StatusCampanha.EmAndamento, campanha!.Status);
         Assert.Empty(cenario.Scheduler.Agendamentos);

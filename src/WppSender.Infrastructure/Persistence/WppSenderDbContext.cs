@@ -71,7 +71,7 @@ public class WppSenderDbContext : DbContext
         {
             entity.ToTable("campanhas", t => t.HasCheckConstraint(
                 "ck_campanhas_status",
-                "status IN ('rascunho','agendada','em_andamento','pausada','concluida','cancelada')"));
+                "status IN ('rascunho','agendada','em_andamento','pausada','concluida','concluida_com_falhas','cancelada')"));
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Nome).IsRequired();
             entity.Property(c => c.Mensagem).IsRequired();
@@ -104,9 +104,7 @@ public class WppSenderDbContext : DbContext
             entity.HasIndex(e => new { e.CampanhaId, e.Status });
             entity.HasIndex(e => e.LeadId);
             entity.HasIndex(e => new { e.CampanhaId, e.LeadId }).IsUnique();
-            // Envios são "fotografados" na criação da campanha (uma linha por lead), então
-            // deletar uma campanha em Rascunho/Agendada (único caso permitido) deve arrastar
-            // seus envios junto — diferente do padrão SetNull de Grupos, onde leads sobrevivem ao grupo.
+
             entity.HasOne<Campanha>()
                 .WithMany()
                 .HasForeignKey(e => e.CampanhaId)
@@ -151,6 +149,7 @@ public class WppSenderDbContext : DbContext
         StatusCampanha.EmAndamento => "em_andamento",
         StatusCampanha.Pausada => "pausada",
         StatusCampanha.Concluida => "concluida",
+        StatusCampanha.ConcluidaComFalhas => "concluida_com_falhas",
         StatusCampanha.Cancelada => "cancelada",
         _ => throw new ArgumentOutOfRangeException(nameof(status)),
     };
@@ -162,6 +161,7 @@ public class WppSenderDbContext : DbContext
         "em_andamento" => StatusCampanha.EmAndamento,
         "pausada" => StatusCampanha.Pausada,
         "concluida" => StatusCampanha.Concluida,
+        "concluida_com_falhas" => StatusCampanha.ConcluidaComFalhas,
         "cancelada" => StatusCampanha.Cancelada,
         _ => throw new ArgumentOutOfRangeException(nameof(valor)),
     };

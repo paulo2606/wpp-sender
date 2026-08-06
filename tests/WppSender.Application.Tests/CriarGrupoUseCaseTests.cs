@@ -17,13 +17,13 @@ public class CriarGrupoUseCaseTests
         var lead2 = await criarLeadUseCase.ExecutarAsync("Lead2", "11922222222", null, null, null);
         var useCase = new CriarGrupoUseCase(grupoRepositorio, leadRepositorio, new FakeUnitOfWork());
 
-        var resultado = await useCase.ExecutarAsync("Clientes VIP", "Descricao", new[] { lead1.LeadId!.Value, lead2.LeadId!.Value });
+        var resultado = await useCase.ExecutarAsync("Clientes VIP", "Descricao", new[] { lead1.Valor, lead2.Valor });
 
         Assert.True(resultado.Sucesso);
-        var leadAtualizado1 = await leadRepositorio.BuscarPorIdAsync(lead1.LeadId.Value);
-        var leadAtualizado2 = await leadRepositorio.BuscarPorIdAsync(lead2.LeadId.Value);
-        Assert.Equal(resultado.GrupoId, leadAtualizado1!.GrupoId);
-        Assert.Equal(resultado.GrupoId, leadAtualizado2!.GrupoId);
+        var leadAtualizado1 = await leadRepositorio.BuscarPorIdAsync(lead1.Valor);
+        var leadAtualizado2 = await leadRepositorio.BuscarPorIdAsync(lead2.Valor);
+        Assert.Equal(resultado.Valor, leadAtualizado1!.GrupoId);
+        Assert.Equal(resultado.Valor, leadAtualizado2!.GrupoId);
     }
 
     [Fact]
@@ -49,13 +49,13 @@ public class CriarGrupoUseCaseTests
         var idInexistente = Guid.NewGuid();
         var useCase = new CriarGrupoUseCase(grupoRepositorio, leadRepositorio, new FakeUnitOfWork());
 
-        var resultado = await useCase.ExecutarAsync("Grupo", null, new[] { lead1.LeadId!.Value, idInexistente });
+        var resultado = await useCase.ExecutarAsync("Grupo", null, new[] { lead1.Valor, idInexistente });
 
         Assert.False(resultado.Sucesso);
         Assert.Contains(idInexistente.ToString(), resultado.MensagemErro);
         var (_, total) = await grupoRepositorio.ListarComContagemAsync(1, 10);
         Assert.Equal(0, total);
-        var lead1Atualizado = await leadRepositorio.BuscarPorIdAsync(lead1.LeadId.Value);
+        var lead1Atualizado = await leadRepositorio.BuscarPorIdAsync(lead1.Valor);
         Assert.Null(lead1Atualizado!.GrupoId);
     }
 
@@ -67,10 +67,10 @@ public class CriarGrupoUseCaseTests
         var criarLeadUseCase = new CriarLeadUseCase(leadRepositorio);
         var excluirLeadUseCase = new ExcluirLeadUseCase(leadRepositorio);
         var lead1 = await criarLeadUseCase.ExecutarAsync("Lead1", "11911111111", null, null, null);
-        await excluirLeadUseCase.ExecutarAsync(lead1.LeadId!.Value);
+        await excluirLeadUseCase.ExecutarAsync(lead1.Valor);
         var useCase = new CriarGrupoUseCase(grupoRepositorio, leadRepositorio, new FakeUnitOfWork());
 
-        var resultado = await useCase.ExecutarAsync("Grupo", null, new[] { lead1.LeadId.Value });
+        var resultado = await useCase.ExecutarAsync("Grupo", null, new[] { lead1.Valor });
 
         Assert.False(resultado.Sucesso);
     }
@@ -84,7 +84,7 @@ public class CriarGrupoUseCaseTests
         var lead1 = await criarLeadUseCase.ExecutarAsync("Lead1", "11911111111", null, null, null);
         var useCase = new CriarGrupoUseCase(grupoRepositorio, leadRepositorio, new FakeUnitOfWork());
 
-        var resultado = await useCase.ExecutarAsync("", null, new[] { lead1.LeadId!.Value });
+        var resultado = await useCase.ExecutarAsync("", null, new[] { lead1.Valor });
 
         Assert.False(resultado.Sucesso);
         Assert.Contains("Nome", resultado.MensagemErro);

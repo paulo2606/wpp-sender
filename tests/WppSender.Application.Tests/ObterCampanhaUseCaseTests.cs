@@ -20,7 +20,7 @@ public class ObterCampanhaUseCaseTests
             .ExecutarAsync("Campanha", "Msg", grupoId, null);
         var useCase = new ObterCampanhaUseCase(campanhaRepositorio, envioRepositorio);
 
-        var resultado = await useCase.ExecutarAsync(criada.CampanhaId!.Value);
+        var resultado = await useCase.ExecutarAsync(criada.Valor);
 
         Assert.NotNull(resultado);
         Assert.Equal("Campanha", resultado!.Campanha.Nome);

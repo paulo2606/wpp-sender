@@ -37,8 +37,7 @@ public class VarredorDeCampanhasAgendadasJob
         {
             if (sessao.Status != StatusSessaoWhatsApp.Conectado)
             {
-                // Decisão explícita: sem sessão conectada no horário agendado, pausa
-                // e reporta erro em vez de esperar silenciosamente pelo próximo ciclo.
+
                 campanha.Iniciar();
                 campanha.Pausar();
                 await _campanhaRepositorio.AtualizarAsync(campanha);

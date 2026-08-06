@@ -64,7 +64,7 @@ public class LeadsController : ControllerBase
             return Conflict(new ErroResponse(resultado.MensagemErro!));
         }
 
-        return Ok(new { id = resultado.LeadId });
+        return Ok(new { id = resultado.Valor });
     }
 
     [HttpPut("{id:guid}")]
@@ -95,7 +95,7 @@ public class LeadsController : ControllerBase
             return NotFound(new ErroResponse(resultado.MensagemErro!));
         }
 
-        return Ok(ParaLeadResponse(resultado.Lead!));
+        return Ok(ParaLeadResponse(resultado.Valor!));
     }
 
     [HttpDelete("{id:guid}")]

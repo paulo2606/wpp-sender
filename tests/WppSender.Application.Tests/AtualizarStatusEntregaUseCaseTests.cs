@@ -75,7 +75,6 @@ public class AtualizarStatusEntregaUseCaseTests
         var cenario = new Cenario();
         var enviadoEm = cenario.Relogio.Agora.AddMinutes(-15);
         var (_, envio) = await cenario.CriarEnvioEmAndamentoAsync("wamid.1", enviadoEm);
-        // Sem entrada em StatusPorMensagemId: simula ACK que nunca chegou.
 
         await cenario.CriarUseCase(timeoutConfirmacaoMinutos: 10).ExecutarAsync();
 
@@ -110,11 +109,24 @@ public class AtualizarStatusEntregaUseCaseTests
     }
 
     [Fact]
+    public async Task DeveConcluirCampanhaComFalhas_QuandoAlgumEnvioFalhaAoConfirmarEntrega()
+    {
+        var cenario = new Cenario();
+        var (campanha, _) = await cenario.CriarEnvioEmAndamentoAsync("wamid.1", cenario.Relogio.Agora);
+        cenario.WhatsAppClient.StatusPorMensagemId["wamid.1"] = StatusEntregaMensagem.Erro;
+
+        await cenario.CriarUseCase().ExecutarAsync();
+
+        var atualizada = await cenario.CampanhaRepositorio.BuscarPorIdAsync(campanha.Id);
+        Assert.Equal(StatusCampanha.ConcluidaComFalhas, atualizada!.Status);
+    }
+
+    [Fact]
     public async Task NaoDeveConcluirCampanha_QuandoAindaHaEnvioAguardandoConfirmacao()
     {
         var cenario = new Cenario();
         var (campanha, _) = await cenario.CriarEnvioEmAndamentoAsync("wamid.1", cenario.Relogio.Agora);
-        // Segundo envio da mesma campanha ainda sem ACK e dentro do timeout.
+
         var segundoEnvio = new Envio(Guid.NewGuid(), campanha.Id, Guid.NewGuid());
         segundoEnvio.MarcarComoEnviado(cenario.Relogio.Agora, "wamid.2");
         await cenario.EnvioRepositorio.AdicionarVariosAsync(new[] { segundoEnvio });

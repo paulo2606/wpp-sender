@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using WppSender.Application.Auth;
+using WppSender.Infrastructure.Security;
 
 namespace WppSender.Api.Auth;
 
@@ -11,11 +13,13 @@ public class AuthController : ControllerBase
 {
     private readonly AutenticarUsuarioUseCase _autenticarUseCase;
     private readonly RegistrarUsuarioUseCase _registrarUseCase;
+    private readonly JwtOptions _jwtOptions;
 
-    public AuthController(AutenticarUsuarioUseCase autenticarUseCase, RegistrarUsuarioUseCase registrarUseCase)
+    public AuthController(AutenticarUsuarioUseCase autenticarUseCase, RegistrarUsuarioUseCase registrarUseCase, IOptions<JwtOptions> jwtOptions)
     {
         _autenticarUseCase = autenticarUseCase;
         _registrarUseCase = registrarUseCase;
+        _jwtOptions = jwtOptions.Value;
     }
 
     [AllowAnonymous]
@@ -30,12 +34,27 @@ public class AuthController : ControllerBase
             return Unauthorized(new ErroResponse(resultado.MensagemErro!));
         }
 
-        return Ok(new LoginResponse(resultado.Token!));
+        Response.Cookies.Append("wpp_auth", resultado.Valor!, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTimeOffset.UtcNow.AddMinutes(_jwtOptions.ExpirationMinutes),
+        });
+
+        return Ok();
     }
 
-    // Endpoint de bootstrap: só funciona enquanto não existir nenhum usuário na base.
-    // Não é exposto no frontend — existe apenas para o único usuário se cadastrar uma vez.
     [AllowAnonymous]
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Delete("wpp_auth");
+        return Ok();
+    }
+
+    [AllowAnonymous]
+    [EnableRateLimiting("registrar")]
     [HttpPost("registrar")]
     public async Task<IActionResult> Registrar([FromBody] RegistrarRequest request)
     {

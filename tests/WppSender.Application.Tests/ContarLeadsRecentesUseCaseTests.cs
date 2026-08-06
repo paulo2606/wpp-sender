@@ -13,7 +13,7 @@ public class ContarLeadsRecentesUseCaseTests
         var leadRepositorio = new FakeLeadRepository();
         await new CriarLeadUseCase(leadRepositorio).ExecutarAsync("Recente", "11911111111", null, null, null);
         var excluido = await new CriarLeadUseCase(leadRepositorio).ExecutarAsync("Excluido", "11922222222", null, null, null);
-        await new ExcluirLeadUseCase(leadRepositorio).ExecutarAsync(excluido.LeadId!.Value);
+        await new ExcluirLeadUseCase(leadRepositorio).ExecutarAsync(excluido.Valor);
         var useCase = new ContarLeadsRecentesUseCase(leadRepositorio);
 
         var resultado = await useCase.ExecutarAsync(dias: 7);

@@ -2,9 +2,6 @@ using WppSender.Domain;
 
 namespace WppSender.Application.Campanhas;
 
-// Roda periodicamente (job Hangfire) consultando o microserviço de WhatsApp pelo ACK real
-// (entregue/lido/erro) dos envios que já saíram mas ainda não têm confirmação. É essa classe
-// que decide, de fato, quando uma campanha está concluída — não mais o motor de disparo.
 public class AtualizarStatusEntregaUseCase
 {
     private const string MotivoErroReportado = "Falha reportada pelo serviço de WhatsApp";
@@ -113,7 +110,9 @@ public class AtualizarStatusEntregaUseCase
             return;
         }
 
-        campanha.Concluir();
+        var comFalhas = contagens.GetValueOrDefault(StatusEnvio.Falhou) > 0
+            || contagens.GetValueOrDefault(StatusEnvio.FalhouEntrega) > 0;
+        campanha.Concluir(comFalhas);
         await _campanhaRepositorio.AtualizarAsync(campanha);
     }
 }

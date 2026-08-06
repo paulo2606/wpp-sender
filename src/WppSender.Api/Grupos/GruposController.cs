@@ -35,13 +35,13 @@ public class GruposController : ControllerBase
             return BadRequest(new ErroResponse(resultado.MensagemErro!));
         }
 
-        return Ok(new { id = resultado.GrupoId });
+        return Ok(new { id = resultado.Valor });
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Editar(Guid id, [FromBody] EditarGrupoRequest request)
     {
-        var resultado = await _editarUseCase.ExecutarAsync(id, request.Nome, request.Descricao);
+        var resultado = await _editarUseCase.ExecutarAsync(id, request.Nome, request.Descricao, request.LeadIds);
 
         if (!resultado.Sucesso)
         {

@@ -15,4 +15,9 @@ public class FakeConfiguracaoEnvioRepository : IConfiguracaoEnvioRepository
     {
         return Task.FromResult(_config.TentarRegistrarEnvio(hoje));
     }
+
+    public Task<ConfiguracaoEnvio> ObterAsync()
+    {
+        return Task.FromResult(_config);
+    }
 }

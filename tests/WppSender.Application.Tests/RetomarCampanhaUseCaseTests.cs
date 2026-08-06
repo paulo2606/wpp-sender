@@ -17,14 +17,14 @@ public class RetomarCampanhaUseCaseTests
         await new CriarLeadUseCase(leadRepositorio).ExecutarAsync("Lead1", "11911111111", null, null, null, grupoId);
         var criada = await new CriarCampanhaUseCase(campanhaRepositorio, envioRepositorio, leadRepositorio, new FakeUnitOfWork())
             .ExecutarAsync("Campanha", "Msg", grupoId, null);
-        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.CampanhaId!.Value);
+        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.Valor);
         campanha!.Iniciar();
         campanha.Pausar();
         await campanhaRepositorio.AtualizarAsync(campanha);
         var sessaoRepositorio = new FakeSessaoWhatsAppRepository();
         var scheduler = new FakeCampanhaJobScheduler();
 
-        return (campanhaRepositorio, sessaoRepositorio, scheduler, criada.CampanhaId.Value);
+        return (campanhaRepositorio, sessaoRepositorio, scheduler, criada.Valor);
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public class RetomarCampanhaUseCaseTests
         var scheduler = new FakeCampanhaJobScheduler();
         var useCase = new RetomarCampanhaUseCase(campanhaRepositorio, sessaoRepositorio, scheduler);
 
-        var resultado = await useCase.ExecutarAsync(criada.CampanhaId!.Value);
+        var resultado = await useCase.ExecutarAsync(criada.Valor);
 
         Assert.False(resultado.Sucesso);
         Assert.Equal(RetomarCampanhaErro.StatusInvalido, resultado.Erro);

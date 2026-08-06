@@ -1,4 +1,5 @@
 using WppSender.Domain;
+using WppSender.Application.Shared;
 
 namespace WppSender.Application.Auth;
 
@@ -15,24 +16,16 @@ public class RegistrarUsuarioUseCase
         _hasher = hasher;
     }
 
-    public async Task<RegistroResult> ExecutarAsync(string email, string senha)
+    public async Task<Resultado> ExecutarAsync(string email, string senha)
     {
-        if (await _repositorio.ExisteAlgumAsync())
-        {
-            return RegistroResult.Falha(MensagemCadastroIndisponivel);
-        }
-
         var usuario = new Usuario(Guid.NewGuid(), email, _hasher.Hash(senha));
 
-        try
+        var criado = await _repositorio.AdicionarSeForOPrimeiroAsync(usuario);
+        if (!criado)
         {
-            await _repositorio.AdicionarAsync(usuario);
-        }
-        catch (InvalidOperationException)
-        {
-            return RegistroResult.Falha(MensagemCadastroIndisponivel);
+            return Resultado.Falha(MensagemCadastroIndisponivel);
         }
 
-        return RegistroResult.ComSucesso();
+        return Resultado.ComSucesso();
     }
 }

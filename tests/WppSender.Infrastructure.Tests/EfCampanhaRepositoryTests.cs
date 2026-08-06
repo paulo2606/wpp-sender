@@ -51,8 +51,7 @@ public class EfCampanhaRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task RemoverAsync_DeveApagarEnviosEmCascata()
     {
-        // Envios são "fotografados" na criação da campanha; sem a FK com cascade, deletar
-        // uma campanha em Rascunho/Agendada (único caso permitido) deixaria os envios órfãos.
+
         var campanhaRepositorio = new EfCampanhaRepository(_dbContext);
         var envioRepositorio = new EfEnvioRepository(_dbContext);
         var campanha = new Campanha(Guid.NewGuid(), "Campanha", "Msg", Guid.NewGuid(), null);

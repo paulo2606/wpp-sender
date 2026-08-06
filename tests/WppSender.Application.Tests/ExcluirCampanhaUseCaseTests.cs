@@ -19,10 +19,10 @@ public class ExcluirCampanhaUseCaseTests
             .ExecutarAsync("Campanha", "Msg", grupoId, null);
         var useCase = new ExcluirCampanhaUseCase(campanhaRepositorio);
 
-        var resultado = await useCase.ExecutarAsync(criada.CampanhaId!.Value);
+        var resultado = await useCase.ExecutarAsync(criada.Valor);
 
         Assert.True(resultado.Sucesso);
-        Assert.Null(await campanhaRepositorio.BuscarPorIdAsync(criada.CampanhaId.Value));
+        Assert.Null(await campanhaRepositorio.BuscarPorIdAsync(criada.Valor));
     }
 
     [Fact]
@@ -47,12 +47,12 @@ public class ExcluirCampanhaUseCaseTests
         await new CriarLeadUseCase(leadRepositorio).ExecutarAsync("Lead1", "11911111111", null, null, null, grupoId);
         var criada = await new CriarCampanhaUseCase(campanhaRepositorio, envioRepositorio, leadRepositorio, new FakeUnitOfWork())
             .ExecutarAsync("Campanha", "Msg", grupoId, null);
-        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.CampanhaId!.Value);
+        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.Valor);
         campanha!.Iniciar();
         await campanhaRepositorio.AtualizarAsync(campanha);
         var useCase = new ExcluirCampanhaUseCase(campanhaRepositorio);
 
-        var resultado = await useCase.ExecutarAsync(criada.CampanhaId.Value);
+        var resultado = await useCase.ExecutarAsync(criada.Valor);
 
         Assert.False(resultado.Sucesso);
         Assert.Equal(ExcluirCampanhaErro.NaoPermiteExclusao, resultado.Erro);

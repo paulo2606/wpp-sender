@@ -61,8 +61,7 @@ public class CsvHelperLeadTests
         var parser = new CsvHelperLeadParser();
         var linhas = parser.Parse(destino).ToList();
         Assert.Single(linhas);
-        // O parser remove o prefixo de aspas que o próprio writer adicionou, para que
-        // exportar e reimportar o mesmo lead não acumule uma aspa extra a cada ciclo.
+
         Assert.Equal("=cmd|'/c calc'!A1", linhas[0].Nome);
     }
 

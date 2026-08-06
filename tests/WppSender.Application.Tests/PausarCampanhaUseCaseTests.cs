@@ -18,15 +18,15 @@ public class PausarCampanhaUseCaseTests
         await new CriarLeadUseCase(leadRepositorio).ExecutarAsync("Lead1", "11911111111", null, null, null, grupoId);
         var criada = await new CriarCampanhaUseCase(campanhaRepositorio, envioRepositorio, leadRepositorio, new FakeUnitOfWork())
             .ExecutarAsync("Campanha", "Msg", grupoId, null);
-        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.CampanhaId!.Value);
+        var campanha = await campanhaRepositorio.BuscarPorIdAsync(criada.Valor);
         campanha!.Iniciar();
         await campanhaRepositorio.AtualizarAsync(campanha);
         var useCase = new PausarCampanhaUseCase(campanhaRepositorio);
 
-        var resultado = await useCase.ExecutarAsync(criada.CampanhaId.Value);
+        var resultado = await useCase.ExecutarAsync(criada.Valor);
 
         Assert.True(resultado.Sucesso);
-        var recarregada = await campanhaRepositorio.BuscarPorIdAsync(criada.CampanhaId.Value);
+        var recarregada = await campanhaRepositorio.BuscarPorIdAsync(criada.Valor);
         Assert.Equal(StatusCampanha.Pausada, recarregada!.Status);
     }
 
@@ -42,7 +42,7 @@ public class PausarCampanhaUseCaseTests
             .ExecutarAsync("Campanha", "Msg", grupoId, null);
         var useCase = new PausarCampanhaUseCase(campanhaRepositorio);
 
-        var resultado = await useCase.ExecutarAsync(criada.CampanhaId!.Value);
+        var resultado = await useCase.ExecutarAsync(criada.Valor);
 
         Assert.False(resultado.Sucesso);
         Assert.Equal(PausarCampanhaErro.StatusInvalido, resultado.Erro);

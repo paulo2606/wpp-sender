@@ -22,7 +22,7 @@ public class CriarCampanhaUseCaseTests
         var resultado = await useCase.ExecutarAsync("Campanha", "Olá {{nome}}", grupoId, agendadoPara: null);
 
         Assert.True(resultado.Sucesso);
-        var campanha = await campanhaRepositorio.BuscarPorIdAsync(resultado.CampanhaId!.Value);
+        var campanha = await campanhaRepositorio.BuscarPorIdAsync(resultado.Valor);
         Assert.NotNull(campanha);
         var contagens = await envioRepositorio.ContarPorStatusAsync(campanha!.Id);
         Assert.Equal(2, contagens[WppSender.Domain.StatusEnvio.Pendente]);
@@ -57,7 +57,7 @@ public class CriarCampanhaUseCaseTests
         var resultado = await useCase.ExecutarAsync("Campanha", "Msg", grupoId, DateTime.UtcNow.AddDays(1));
 
         Assert.True(resultado.Sucesso);
-        var campanha = await campanhaRepositorio.BuscarPorIdAsync(resultado.CampanhaId!.Value);
+        var campanha = await campanhaRepositorio.BuscarPorIdAsync(resultado.Valor);
         Assert.Equal(WppSender.Domain.StatusCampanha.Agendada, campanha!.Status);
     }
 }

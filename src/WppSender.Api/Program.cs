@@ -5,6 +5,7 @@ using Hangfire.PostgreSql;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -25,20 +26,25 @@ using WppSender.Infrastructure.WhatsApp;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.AddFixedWindowLimiter("login", limiterOptions =>
-    {
-        limiterOptions.PermitLimit = 5;
-        limiterOptions.Window = TimeSpan.FromMinutes(1);
-        limiterOptions.QueueLimit = 0;
-    });
+
+    Func<HttpContext, RateLimitPartition<string>> particionarPorIp = httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "sem-ip",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+            });
+
+    options.AddPolicy("login", particionarPorIp);
+    options.AddPolicy("registrar", particionarPorIp);
 });
 
 var origensPermitidas = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
@@ -48,7 +54,7 @@ builder.Services.AddCors(options =>
     {
         if (origensPermitidas.Length > 0)
         {
-            policy.WithOrigins(origensPermitidas).AllowAnyHeader().AllowAnyMethod();
+            policy.WithOrigins(origensPermitidas).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
         }
     });
 });
@@ -81,9 +87,6 @@ builder.Services.AddHangfire(config => config
     .UseRecommendedSerializerSettings()
     .UsePostgreSqlStorage(options => options.UseNpgsqlConnection(builder.Configuration.GetConnectionString("Default"))));
 
-// O worker do Hangfire não roda durante os testes de integração (WebApplicationFactory
-// usa o Environment "Testing"): os testes chamam ProcessarProximoEnvioUseCase diretamente
-// pra simular um passo do motor, de forma determinística, sem depender de um worker real.
 if (!builder.Environment.IsEnvironment("Testing"))
 {
     builder.Services.AddHangfireServer();
@@ -160,6 +163,7 @@ builder.Services.AddScoped<ContarLeadsRecentesUseCase>();
 builder.Services.AddScoped<CalcularTaxaEnvioUseCase>();
 builder.Services.AddScoped<ContarLeadsPorGrupoUseCase>();
 builder.Services.AddScoped<ObterProximaCampanhaAgendadaUseCase>();
+builder.Services.AddScoped<ObterLimiteDiarioEnvioUseCase>();
 
 builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
     .Configure<Microsoft.Extensions.Options.IOptions<JwtOptions>>((bearerOptions, jwtOptions) =>
@@ -174,9 +178,23 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
-            ValidateIssuer = false,
-            ValidateAudience = false,
+            ValidateIssuer = true,
+            ValidIssuer = jwtOptions.Value.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwtOptions.Value.Audience,
             ValidateLifetime = true
+        };
+
+        bearerOptions.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                if (string.IsNullOrEmpty(context.Token) && context.Request.Cookies.TryGetValue("wpp_auth", out var cookieToken))
+                {
+                    context.Token = cookieToken;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -190,13 +208,37 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromDays(365);
+    options.IncludeSubDomains = true;
+    options.Preload = true;
+});
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+else
+{
+    app.UseHsts();
+}
+
+var proxiesConhecidos = builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>() ?? Array.Empty<string>();
+if (proxiesConhecidos.Length > 0)
+{
+    var forwardedHeadersOptions = new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    };
+    foreach (var proxy in proxiesConhecidos)
+    {
+        forwardedHeadersOptions.KnownProxies.Add(System.Net.IPAddress.Parse(proxy));
+    }
+    app.UseForwardedHeaders(forwardedHeadersOptions);
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
